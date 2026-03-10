@@ -39,6 +39,7 @@ export const createWorkout = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Invalid or expired token" });
     }
     if (!decoded.sub || decoded.sub !== userId) {
+      console.log(decoded.sub, userId)
       return res
         .status(403)
         .json({ message: "userId does not match authenticated user" });
