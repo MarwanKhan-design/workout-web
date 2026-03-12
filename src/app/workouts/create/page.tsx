@@ -22,10 +22,10 @@ export default function CreateWorkout() {
       try {
         setError(null)
         setLoading(true)
-
+        const localUserId = localStorage.getItem('userId')
         const me = await apiFetch<{ user?: { _id?: string } }>("/auth/me")
         const id = me?.user?._id
-        setUserId(id ?? null)
+        setUserId(localUserId ?? null)
 
         const ex = await apiFetch<Exercise[]>("/exercise")
         setExercises(Array.isArray(ex) ? ex : [])
