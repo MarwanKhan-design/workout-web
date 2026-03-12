@@ -7,6 +7,7 @@ import { apiFetch } from '@/lib/api'
 export default function Navbar() {
   const router = useRouter()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
     const sync = () => setIsLoggedIn(Boolean(localStorage.getItem('token')))
@@ -15,17 +16,15 @@ export default function Navbar() {
     const onStorage = (e: StorageEvent) => {
       if (e.key === 'token') sync()
     }
-    // window.addEventListener('storage', onStorage)
-    // return () => window.removeEventListener('storage', onStorage)
     const onAuthChange = () => sync()
 
-    window.addEventListener("storage", onStorage)
-    window.addEventListener("auth-change", onAuthChange)
+    window.addEventListener('storage', onStorage)
+    window.addEventListener('auth-change', onAuthChange as any)
 
-  return () => {
-    window.removeEventListener("storage", onStorage)
-    window.removeEventListener("auth-change", onAuthChange)
-  }
+    return () => {
+      window.removeEventListener('storage', onStorage)
+      window.removeEventListener('auth-change', onAuthChange as any)
+    }
   }, [])
 
   async function handleLogout() {
@@ -37,6 +36,7 @@ export default function Navbar() {
       localStorage.removeItem('token')
       localStorage.removeItem('userId')
       setIsLoggedIn(false)
+      setMenuOpen(false)
       router.push('/login')
       router.refresh()
     }
@@ -70,14 +70,39 @@ export default function Navbar() {
             </Link>
           </div>
           {isLoggedIn ? (
-            <div className="ml-2 flex items-center gap-2">
+            <div className="relative ml-2 flex items-center gap-2">
               <button
                 type="button"
-                onClick={handleLogout}
-                className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-3 py-2 font-medium text-slate-800 hover:bg-slate-50"
+                onClick={() => setMenuOpen((v) => !v)}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-600 text-xs font-medium text-white hover:bg-sky-700"
               >
-                Logout
+                U
               </button>
+              {menuOpen && (
+                <div className="absolute right-0 top-10 w-40 rounded-lg border border-slate-200 bg-white py-1 text-sm shadow-lg">
+                  <Link
+                    href="/dashboard/profile"
+                    className="block px-3 py-2 text-slate-700 hover:bg-slate-50"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Profile
+                  </Link>
+                  <Link
+                    href="/dashboard/my-progress"
+                    className="block px-3 py-2 text-slate-700 hover:bg-slate-50"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    My progress
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="mt-1 block w-full px-3 py-2 text-left text-slate-700 hover:bg-slate-50"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="ml-2 flex items-center gap-2">
