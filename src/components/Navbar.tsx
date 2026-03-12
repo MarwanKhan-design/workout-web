@@ -15,8 +15,17 @@ export default function Navbar() {
     const onStorage = (e: StorageEvent) => {
       if (e.key === 'token') sync()
     }
-    window.addEventListener('storage', onStorage)
-    return () => window.removeEventListener('storage', onStorage)
+    // window.addEventListener('storage', onStorage)
+    // return () => window.removeEventListener('storage', onStorage)
+    const onAuthChange = () => sync()
+
+    window.addEventListener("storage", onStorage)
+    window.addEventListener("auth-change", onAuthChange)
+
+  return () => {
+    window.removeEventListener("storage", onStorage)
+    window.removeEventListener("auth-change", onAuthChange)
+  }
   }, [])
 
   async function handleLogout() {

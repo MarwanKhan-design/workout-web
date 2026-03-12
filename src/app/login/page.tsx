@@ -40,6 +40,7 @@ export default function Login() {
       }
 
       localStorage.setItem("token", data.token)
+      window.dispatchEvent(new Event("auth-change"))
       const userId = data.user?.id || data.user?._id
       if (userId) localStorage.setItem("userId", userId)
 
