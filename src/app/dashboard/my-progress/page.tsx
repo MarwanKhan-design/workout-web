@@ -9,7 +9,10 @@ type WorkoutSession = {
   userId: string
   workoutId: string
   date: string
-  exercises: { exercise: string; reps?: number; weight?: number; duration?: number }[]
+  exercises: {
+    exercise: string
+    sets?: { reps: number; weight: number; duration: number }[]
+  }[]
 }
 
 export default function MyProgressPage() {
@@ -48,30 +51,54 @@ export default function MyProgressPage() {
 
   const workoutNameById = useMemo(() => {
     const map: Record<string, string> = {}
+  
     workouts.forEach((w) => {
-      if (w._id) map[w._id] = w.name
+      if (w._id) {
+        map[String(w._id)] = w.name
+      }
     })
+  
     return map
   }, [workouts])
 
   const stats = useMemo(() => {
     if (!sessions.length) return null
-
+  
     const totalSessions = sessions.length
-    const totalSets = sessions.reduce(
-      (sum, s) => sum + (s.exercises?.length ?? 0),
-      0
-    )
+  
+    const totalSets = sessions.reduce((sessionSum, session) => {
+      const sessionSets =
+        session.exercises?.reduce((exerciseSum, exercise) => {
+          return exerciseSum + (exercise.sets?.length ?? 0)
+        }, 0) ?? 0
+  
+      return sessionSum + sessionSets
+    }, 0)
+  
     const first = sessions
       .slice()
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0]
+      .sort(
+        (a, b) =>
+          new Date(a.date).getTime() -
+          new Date(b.date).getTime()
+      )[0]
+  
     const last = sessions
       .slice()
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
-
-    return { totalSessions, totalSets, first, last }
+      .sort(
+        (a, b) =>
+          new Date(b.date).getTime() -
+          new Date(a.date).getTime()
+      )[0]
+  
+    return {
+      totalSessions,
+      totalSets,
+      first,
+      last,
+    }
   }, [sessions])
-
+  
   function formatDate(dateStr: string) {
     const d = new Date(dateStr)
     if (Number.isNaN(d.getTime())) return dateStr
@@ -162,8 +189,7 @@ export default function MyProgressPage() {
                       new Date(b.date).getTime() - new Date(a.date).getTime()
                   )
                   .map((s) => {
-                    const name =
-                      workoutNameById[s.workoutId] ?? "Workout " + s.workoutId
+                    const name =  workoutNameById[s.workoutId]
                     const sets = s.exercises?.length ?? 0
                     return (
                       <div

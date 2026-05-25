@@ -9,7 +9,7 @@ type WorkoutSession = {
   userId: string
   workoutId: string
   date: string
-  exercises: { exercise: string; reps?: number; weight?: number; duration?: number }[]
+  exercises: { exercise: string; sets?: { reps: number; weight: number; duration: number }[] }[]
 }
 
 export default function ProfilePage() {
@@ -44,18 +44,31 @@ export default function ProfilePage() {
 
   const stats = useMemo(() => {
     if (!sessions.length) return null
-
+  
     const totalSessions = sessions.length
+  
     const lastSession = sessions
       .slice()
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
-
-    const totalSets = sessions.reduce(
-      (sum, s) => sum + (s.exercises?.length ?? 0),
-      0
-    )
-
-    return { totalSessions, lastSession, totalSets }
+      .sort(
+        (a, b) =>
+          new Date(b.date).getTime() -
+          new Date(a.date).getTime()
+      )[0]
+  
+    const totalSets = sessions.reduce((sessionSum, session) => {
+      const sessionSets =
+        session.exercises?.reduce((exerciseSum, exercise) => {
+          return exerciseSum + (exercise.sets?.length ?? 0)
+        }, 0) ?? 0
+  
+      return sessionSum + sessionSets
+    }, 0)
+  
+    return {
+      totalSessions,
+      lastSession,
+      totalSets,
+    }
   }, [sessions])
 
   return (

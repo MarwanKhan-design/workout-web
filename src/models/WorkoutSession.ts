@@ -2,9 +2,7 @@ import mongoose, { Document, Model, Schema, Types } from "mongoose";
 
 export interface IWorkoutSessionExercise {
   exercise: Types.ObjectId;
-  reps?: number;
-  weight?: number;
-  duration?: number;
+  sets?: { reps: number; weight: number; duration: number }[];
 }
 
 export interface IWorkoutSession extends Document {
@@ -14,12 +12,16 @@ export interface IWorkoutSession extends Document {
   exercises: IWorkoutSessionExercise[];
 }
 
+const RepsSchema = new Schema({
+  reps: { type: Number },
+  weight: { type: Number },
+  duration: { type: Number },
+});
+
 const WorkoutSessionExerciseSchema = new Schema<IWorkoutSessionExercise>(
   {
     exercise: { type: Schema.Types.ObjectId, ref: "Exercise", required: true },
-    reps: { type: Number },
-    weight: { type: Number },
-    duration: { type: Number },
+    sets: { type: [RepsSchema] },
   },
   { _id: false }
 );

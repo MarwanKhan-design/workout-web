@@ -5,10 +5,14 @@ import type { Exercise, Workout } from "@/lib/types"
 import { useParams, useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 
-type ExerciseInputs = {
+type SetInput = {
   reps: string
   weight: string
   duration: string
+}
+
+type ExerciseInputs = {
+  sets: SetInput[]
 }
 
 export default function WorkoutSessionDetailPage() {
@@ -41,7 +45,15 @@ export default function WorkoutSessionDetailPage() {
         if (Array.isArray(w.exercises)) {
           const initial: Record<string, ExerciseInputs> = {}
           for (const exId of w.exercises) {
-            initial[exId] = { reps: "", weight: "", duration: "" }
+            initial[exId] = {
+              sets: [
+                {
+                  reps: "",
+                  weight: "",
+                  duration: "",
+                },
+              ],
+            }
           }
           setInputs(initial)
         }
@@ -63,16 +75,55 @@ export default function WorkoutSessionDetailPage() {
     return allExercises.filter((e) => ids.has(e._id))
   }, [workout, allExercises])
 
-  function updateInput(exerciseId: string, field: keyof ExerciseInputs, value: string) {
-    setInputs((prev) => ({
-      ...prev,
-      [exerciseId]: {
-        reps: prev[exerciseId]?.reps ?? "",
-        weight: prev[exerciseId]?.weight ?? "",
-        duration: prev[exerciseId]?.duration ?? "",
+  function updateInput(
+    exerciseId: string,
+    setIndex: number,
+    field: keyof SetInput,
+    value: string
+  ) {
+    setInputs((prev) => {
+      const exercise = prev[exerciseId]
+  
+      if (!exercise) return prev
+  
+      const updatedSets = [...exercise.sets]
+  
+      updatedSets[setIndex] = {
+        ...updatedSets[setIndex],
         [field]: value,
-      },
-    }))
+      }
+  
+      return {
+        ...prev,
+        [exerciseId]: {
+          ...exercise,
+          sets: updatedSets,
+        },
+      }
+    })
+  }
+
+  function addSet(exerciseId: string) {
+    setInputs((prev) => {
+      const exercise = prev[exerciseId]
+  
+      if (!exercise) return prev
+  
+      return {
+        ...prev,
+        [exerciseId]: {
+          ...exercise,
+          sets: [
+            ...exercise.sets,
+            {
+              reps: "",
+              weight: "",
+              duration: "",
+            },
+          ],
+        },
+      }
+    })
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -89,21 +140,31 @@ export default function WorkoutSessionDetailPage() {
     }
 
     const sessionExercises = workout.exercises.map((exId) => {
-      const raw = inputs[exId] || { reps: "", weight: "", duration: "" }
-      const reps = raw.reps.trim()
-      const weight = raw.weight.trim()
-      const duration = raw.duration.trim()
-
+      const raw = inputs[exId]
+    
       return {
         exercise: exId,
-        reps: reps ? Number(reps) : undefined,
-        weight: weight ? Number(weight) : undefined,
-        duration: duration ? Number(duration) : undefined,
+    
+        sets:
+          raw?.sets
+            .filter(
+              (set) =>
+                set.reps.trim() ||
+                set.weight.trim() ||
+                set.duration.trim()
+            )
+            .map((set) => ({
+              reps: set.reps ? Number(set.reps) : undefined,
+              weight: set.weight ? Number(set.weight) : undefined,
+              duration: set.duration
+                ? Number(set.duration)
+                : undefined,
+            })) || [],
       }
     })
 
     const nonEmpty = sessionExercises.some(
-      (e) => e.reps !== undefined || e.weight !== undefined || e.duration !== undefined
+      (exercise) => exercise.sets.length > 0
     )
     if (!nonEmpty) {
       setError("Enter at least one value (reps, weight, or duration) for any exercise.")
@@ -132,6 +193,72 @@ export default function WorkoutSessionDetailPage() {
     } finally {
       setSubmitting(false)
     }
+  }
+
+  const renderSets = (value: ExerciseInputs, ex: Exercise) => {
+    return (
+      <div className="space-y-3">
+        {value.sets.map((set, index) => (
+          <div
+            key={index}
+            className="rounded-lg border border-slate-200 p-3"
+          >
+            <div className="mb-2 text-xs font-semibold text-slate-500">
+              Set {index + 1}
+            </div>
+  
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <label className="grid gap-1 text-xs text-slate-700">
+                Reps
+                <input
+                  value={set.reps}
+                  onChange={(e) =>
+                    updateInput(ex._id, index, "reps", e.target.value)
+                  }
+                  inputMode="numeric"
+                  className="h-9 rounded-md border border-slate-300 px-2 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-sky-500"
+                  placeholder="e.g. 10"
+                />
+              </label>
+  
+              <label className="grid gap-1 text-xs text-slate-700">
+                Weight (kg)
+                <input
+                  value={set.weight}
+                  onChange={(e) =>
+                    updateInput(ex._id, index, "weight", e.target.value)
+                  }
+                  inputMode="decimal"
+                  className="h-9 rounded-md border border-slate-300 px-2 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-sky-500"
+                  placeholder="e.g. 60"
+                />
+              </label>
+  
+              <label className="grid gap-1 text-xs text-slate-700">
+                Duration (sec)
+                <input
+                  value={set.duration}
+                  onChange={(e) =>
+                    updateInput(ex._id, index, "duration", e.target.value)
+                  }
+                  inputMode="numeric"
+                  className="h-9 rounded-md border border-slate-300 px-2 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-sky-500"
+                  placeholder="e.g. 45"
+                />
+              </label>
+            </div>
+          </div>
+        ))}
+  
+        <button
+          type="button"
+          onClick={() => addSet(ex._id)}
+          className="rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-medium text-sky-700 hover:bg-sky-100"
+        >
+          + Add Set
+        </button>
+      </div>
+    )
   }
 
   return (
@@ -186,6 +313,7 @@ export default function WorkoutSessionDetailPage() {
                         key={ex._id}
                         className="rounded-lg border border-slate-200 px-3 py-3"
                       >
+                        {renderSets(value, ex)}
                         <div className="mb-2 flex items-baseline justify-between gap-3">
                           <div>
                             <h2 className="text-sm font-semibold text-slate-900">
@@ -198,46 +326,7 @@ export default function WorkoutSessionDetailPage() {
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                          <label className="grid gap-1 text-xs text-slate-700">
-                            Reps
-                            <input
-                              value={value.reps}
-                              onChange={(e) =>
-                                updateInput(ex._id, "reps", e.target.value)
-                              }
-                              inputMode="numeric"
-                              className="h-9 rounded-md border border-slate-300 px-2 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-sky-500"
-                              placeholder="e.g. 10"
-                            />
-                          </label>
-
-                          <label className="grid gap-1 text-xs text-slate-700">
-                            Weight (kg)
-                            <input
-                              value={value.weight}
-                              onChange={(e) =>
-                                updateInput(ex._id, "weight", e.target.value)
-                              }
-                              inputMode="decimal"
-                              className="h-9 rounded-md border border-slate-300 px-2 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-sky-500"
-                              placeholder="e.g. 60"
-                            />
-                          </label>
-
-                          <label className="grid gap-1 text-xs text-slate-700">
-                            Duration (sec)
-                            <input
-                              value={value.duration}
-                              onChange={(e) =>
-                                updateInput(ex._id, "duration", e.target.value)
-                              }
-                              inputMode="numeric"
-                              className="h-9 rounded-md border border-slate-300 px-2 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-sky-500"
-                              placeholder="e.g. 45"
-                            />
-                          </label>
-                        </div>
+                       
                       </div>
                     )
                   })}
