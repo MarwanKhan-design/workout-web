@@ -1,5 +1,10 @@
 "use client"
 
+import AreaProgressChart from "@/components/charts/AreaProgressChart"
+import ActivityHeatmap from "@/components/charts/HeatMap"
+import SessionsChart from "@/components/charts/line-chart"
+import ChartsCard from "@/components/charts/StatsCards"
+import StatsCard from "@/components/charts/StatsCards"
 import { apiFetch } from "@/lib/api"
 import type { Workout } from "@/lib/types"
 import { useEffect, useMemo, useState } from "react"
@@ -20,6 +25,26 @@ export default function MyProgressPage() {
   const [workouts, setWorkouts] = useState<Workout[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const chartData = sessions.map((session) => ({
+    date: formatDate(session.date),
+    value: session.exercises.length,
+  }))
+
+  
+  const heatmapData = Object.values(
+    sessions.reduce((acc, session) => {
+      const date = session.date.split("T")[0]
+  
+      if (!acc[date]) {
+        acc[date] = { date, count: 0 }
+      }
+  
+      acc[date].count += 1
+  
+      return acc
+    }, {} as Record<string, { date: string; count: number }>)
+  )
+  
 
   useEffect(() => {
     async function load() {
@@ -213,6 +238,15 @@ export default function MyProgressPage() {
           </section>
         </>
       )}
+{/* Charts */}
+<div className="p-4">
+
+<ChartsCard
+        sessionsData={chartData}
+        progressData={chartData}
+        heatmapData={heatmapData}
+        />
     </div>
+        </div>
   )
 }
