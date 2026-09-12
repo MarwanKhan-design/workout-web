@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { apiFetch } from "@/lib/api"
 import type { Exercise } from "@/lib/types"
+import { Icon } from "@/components/ui"
 
 export default function CreateWorkout() {
   const router = useRouter()
@@ -25,7 +26,7 @@ export default function CreateWorkout() {
         const localUserId = localStorage.getItem('userId')
         const me = await apiFetch<{ user?: { _id?: string } }>("/auth/me")
         const id = me?.user?._id
-        setUserId(localUserId ?? null)
+        setUserId(localUserId ?? id ?? null)
 
         const ex = await apiFetch<Exercise[]>("/exercise")
         setExercises(Array.isArray(ex) ? ex : [])
@@ -94,124 +95,160 @@ export default function CreateWorkout() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            Create workout
-          </h1>
-          <p className="mt-1 text-sm text-slate-600">
-            Pick exercises, add a name, and save.
-          </p>
-        </div>
-        <Link href="/workouts" className="text-sm text-slate-600 hover:text-slate-900">
-          Back to workouts
-        </Link>
+    <div className="relative min-h-screen px-4 pt-28 pb-20 sm:px-6">
+      {/* Ambient background glow */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div className="grid-bg absolute inset-0 opacity-40 [mask-image:radial-gradient(ellipse_70%_50%_at_50%_0%,#000,transparent_80%)]" />
+        <div className="animate-orb absolute top-24 left-1/3 h-96 w-96 rounded-full bg-volt-300/10 blur-[100px]" />
       </div>
 
-      {error && (
-        <div className="mb-6 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          {error}
+      <div className="mx-auto max-w-5xl">
+        <div className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-white/8 pb-6">
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full border border-volt-300/25 bg-volt-300/10 px-3 py-1 text-[0.7rem] font-semibold tracking-[0.16em] text-volt-300 uppercase">
+              Workout Builder
+            </span>
+            <h1 className="mt-3 font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
+              Create a <span className="text-gradient">Workout</span>
+            </h1>
+            <p className="mt-2 text-sm text-white/60">
+              Pick target exercises, assign a routine title, and assemble your workout split.
+            </p>
+          </div>
+          <Link
+            href="/workouts"
+            className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white/80 backdrop-blur-md transition-colors hover:border-white/30 hover:bg-white/10 hover:text-white"
+          >
+            <Icon name="arrow" className="h-4 w-4 rotate-180" />
+            Back to workouts
+          </Link>
         </div>
-      )}
 
-      <form
-        onSubmit={createWorkout}
-        className="grid grid-cols-1 gap-6 md:grid-cols-2"
-      >
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-slate-900">Details</h2>
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="grid gap-3">
-              <label className="grid gap-1">
-                <span className="text-xs font-medium text-slate-700">Name *</span>
+        {error && (
+          <div className="mb-6 flex items-start gap-2.5 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300 backdrop-blur-md">
+            <Icon name="close" className="mt-0.5 h-4 w-4 shrink-0 text-rose-400" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        <form
+          onSubmit={createWorkout}
+          className="grid grid-cols-1 gap-6 md:grid-cols-2"
+        >
+          <section className="space-y-4">
+            <h2 className="font-display text-lg font-semibold text-white">
+              Details
+            </h2>
+            <div className="glass-strong rounded-3xl border border-white/10 p-6 shadow-2xl backdrop-blur-xl space-y-4">
+              <label className="block space-y-1.5">
+                <span className="text-xs font-semibold uppercase tracking-[0.14em] text-white/70">
+                  Workout Name *
+                </span>
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="h-10 rounded-md border border-slate-300 px-3 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-sky-500"
-                  placeholder="e.g. Push Day"
+                  className="glass h-11 w-full rounded-xl border border-white/12 bg-white/[0.04] px-4 text-sm text-white placeholder-white/35 transition-all outline-none focus:border-volt-300/60 focus:bg-white/[0.08] focus:ring-2 focus:ring-volt-300/20"
+                  placeholder="e.g. Push Power A"
                   required
                 />
               </label>
 
-              <label className="grid gap-1">
-                <span className="text-xs font-medium text-slate-700">
+              <label className="block space-y-1.5">
+                <span className="text-xs font-semibold uppercase tracking-[0.14em] text-white/70">
                   Description
                 </span>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  rows={6}
-                  className="resize-none rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-sky-500"
-                  placeholder="Optional notes…"
+                  rows={5}
+                  className="glass w-full rounded-xl border border-white/12 bg-white/[0.04] p-4 text-sm text-white placeholder-white/35 transition-all outline-none resize-none focus:border-volt-300/60 focus:bg-white/[0.08] focus:ring-2 focus:ring-volt-300/20"
+                  placeholder="Target muscle groups, intensity guidelines, coaching notes…"
                 />
               </label>
 
-              <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm">
-                <span className="text-slate-700">Selected exercises</span>
-                <span className="font-medium text-slate-900">{selected.length}</span>
+              <div className="flex items-center justify-between rounded-xl border border-white/8 bg-white/[0.03] px-4 py-3 text-sm">
+                <span className="text-white/70">Selected exercises</span>
+                <span className="rounded-full border border-volt-300/30 bg-volt-300/10 px-2.5 py-0.5 font-mono text-xs font-semibold text-volt-300">
+                  {selected.length}
+                </span>
               </div>
 
               <button
                 type="submit"
                 disabled={loading || submitting}
-                className="inline-flex h-10 items-center justify-center rounded-md bg-sky-600 px-4 text-sm font-medium text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-volt-300 px-5 text-sm font-semibold text-ink-950 shadow-[0_12px_34px_-12px_rgba(214,255,102,0.65)] transition-all hover:-translate-y-0.5 hover:bg-volt-200 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {submitting ? "Creating…" : "Create workout"}
+                {submitting ? "Saving workout…" : "Save workout"}
+                <Icon name="arrow" className="h-4 w-4" />
               </button>
 
               {!userId && !loading && (
-                <p className="text-xs text-slate-500">
-                  Note: you need to be logged in (token in localStorage) to create a workout.
+                <p className="text-center text-xs text-rose-300">
+                  You must be logged in to save a workout.
                 </p>
               )}
             </div>
-          </div>
-        </section>
+          </section>
 
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-slate-900">
-            Choose exercises *
-          </h2>
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            {loading ? (
-              <div className="text-sm text-slate-600">Loading exercises…</div>
-            ) : exercises.length === 0 ? (
-              <div className="text-sm text-slate-600">
-                No exercises found. Create some first in the Exercises page.
-              </div>
-            ) : (
-              <div className="max-h-[420px] space-y-2 overflow-auto pr-1">
-                {exercises.map((ex) => {
-                  const checked = selected.includes(ex._id)
-                  return (
-                    <label
-                      key={ex._id}
-                      className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 px-3 py-2 hover:bg-slate-50"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={() => toggleExercise(ex._id)}
-                        className="mt-1 h-4 w-4 accent-sky-600"
-                      />
-                      <span className="min-w-0">
-                        <span className="block truncate text-sm font-medium text-slate-900">
-                          {ex.name}
+          <section className="space-y-4">
+            <h2 className="font-display text-lg font-semibold text-white">
+              Choose exercises *
+            </h2>
+            <div className="glass-strong rounded-3xl border border-white/10 p-6 shadow-2xl backdrop-blur-xl">
+              {loading ? (
+                <div className="py-8 text-center text-sm text-white/50 animate-pulse">
+                  Loading available exercises…
+                </div>
+              ) : exercises.length === 0 ? (
+                <div className="py-8 text-center text-sm text-white/50">
+                  No exercises found.{" "}
+                  <Link href="/exercises" className="text-volt-300 hover:underline">
+                    Create some first here
+                  </Link>.
+                </div>
+              ) : (
+                <div className="max-h-[440px] space-y-2.5 overflow-y-auto pr-1.5 scroll-thin">
+                  {exercises.map((ex) => {
+                    const checked = selected.includes(ex._id)
+                    return (
+                      <label
+                        key={ex._id}
+                        className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-3.5 transition-all duration-200 ${
+                          checked
+                            ? "border-volt-300/50 bg-volt-300/10 shadow-[0_0_20px_-6px_rgba(214,255,102,0.3)]"
+                            : "border-white/8 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.05]"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleExercise(ex._id)}
+                          className="mt-1 h-4 w-4 accent-volt-400 rounded cursor-pointer"
+                        />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate font-display text-sm font-semibold text-white">
+                            {ex.name}
+                          </span>
+                          <span className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] text-white/60">
+                            <span className="rounded-full bg-white/10 px-2 py-0.5 text-white/80">
+                              {ex.muscleGroup}
+                            </span>
+                            {ex.equipment && (
+                              <span className="text-white/40">
+                                • {ex.equipment}
+                              </span>
+                            )}
+                          </span>
                         </span>
-                        <span className="mt-0.5 block text-xs text-slate-600">
-                          {ex.muscleGroup}
-                          {ex.equipment ? ` • ${ex.equipment}` : ""}
-                        </span>
-                      </span>
-                    </label>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-        </section>
-      </form>
+                      </label>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          </section>
+        </form>
+      </div>
     </div>
   )
 }

@@ -4,6 +4,8 @@ import { apiFetch } from "@/lib/api"
 import type { Exercise, Workout } from "@/lib/types"
 import { useParams, useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
+import { Icon } from "@/components/ui"
+import Link from "next/link"
 
 type SetInput = {
   reps: string
@@ -83,16 +85,14 @@ export default function WorkoutSessionDetailPage() {
   ) {
     setInputs((prev) => {
       const exercise = prev[exerciseId]
-  
       if (!exercise) return prev
-  
+
       const updatedSets = [...exercise.sets]
-  
       updatedSets[setIndex] = {
         ...updatedSets[setIndex],
         [field]: value,
       }
-  
+
       return {
         ...prev,
         [exerciseId]: {
@@ -106,9 +106,8 @@ export default function WorkoutSessionDetailPage() {
   function addSet(exerciseId: string) {
     setInputs((prev) => {
       const exercise = prev[exerciseId]
-  
       if (!exercise) return prev
-  
+
       return {
         ...prev,
         [exerciseId]: {
@@ -141,10 +140,8 @@ export default function WorkoutSessionDetailPage() {
 
     const sessionExercises = workout.exercises.map((exId) => {
       const raw = inputs[exId]
-    
       return {
         exercise: exId,
-    
         sets:
           raw?.sets
             .filter(
@@ -183,11 +180,10 @@ export default function WorkoutSessionDetailPage() {
         }),
       })
 
-      setSuccess("Workout session saved successfully.")
-      // Optionally redirect back to session list or workouts
+      setSuccess("Workout session logged successfully.")
       setTimeout(() => {
         router.push("/workout-session")
-      }, 800)
+      }, 900)
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to save workout session")
     } finally {
@@ -197,153 +193,191 @@ export default function WorkoutSessionDetailPage() {
 
   const renderSets = (value: ExerciseInputs, ex: Exercise) => {
     return (
-      <div className="space-y-3">
+      <div className="mt-4 space-y-3">
         {value.sets.map((set, index) => (
           <div
             key={index}
-            className="rounded-lg border border-slate-200 p-3"
+            className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 transition-all duration-200 hover:border-white/15"
           >
-            <div className="mb-2 text-xs font-semibold text-slate-500">
-              Set {index + 1}
+            <div className="mb-3 flex items-center justify-between text-xs">
+              <span className="font-semibold uppercase tracking-[0.16em] text-volt-300">
+                Set {index + 1}
+              </span>
             </div>
-  
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-              <label className="grid gap-1 text-xs text-slate-700">
-                Reps
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <label className="block space-y-1">
+                <span className="text-xs font-medium text-white/60">Reps</span>
                 <input
                   value={set.reps}
                   onChange={(e) =>
                     updateInput(ex._id, index, "reps", e.target.value)
                   }
                   inputMode="numeric"
-                  className="h-9 rounded-md border border-slate-300 px-2 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-sky-500"
+                  className="glass h-10 w-full rounded-xl border border-white/12 bg-white/[0.04] px-3 text-sm text-white outline-none focus:border-volt-300/60 focus:bg-white/[0.08] focus:ring-2 focus:ring-volt-300/20"
                   placeholder="e.g. 10"
                 />
               </label>
-  
-              <label className="grid gap-1 text-xs text-slate-700">
-                Weight (kg)
+
+              <label className="block space-y-1">
+                <span className="text-xs font-medium text-white/60">Weight (kg)</span>
                 <input
                   value={set.weight}
                   onChange={(e) =>
                     updateInput(ex._id, index, "weight", e.target.value)
                   }
                   inputMode="decimal"
-                  className="h-9 rounded-md border border-slate-300 px-2 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-sky-500"
+                  className="glass h-10 w-full rounded-xl border border-white/12 bg-white/[0.04] px-3 text-sm text-white outline-none focus:border-volt-300/60 focus:bg-white/[0.08] focus:ring-2 focus:ring-volt-300/20"
                   placeholder="e.g. 60"
                 />
               </label>
-  
-              <label className="grid gap-1 text-xs text-slate-700">
-                Duration (sec)
+
+              <label className="block space-y-1">
+                <span className="text-xs font-medium text-white/60">Duration (sec)</span>
                 <input
                   value={set.duration}
                   onChange={(e) =>
                     updateInput(ex._id, index, "duration", e.target.value)
                   }
                   inputMode="numeric"
-                  className="h-9 rounded-md border border-slate-300 px-2 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-sky-500"
+                  className="glass h-10 w-full rounded-xl border border-white/12 bg-white/[0.04] px-3 text-sm text-white outline-none focus:border-volt-300/60 focus:bg-white/[0.08] focus:ring-2 focus:ring-volt-300/20"
                   placeholder="e.g. 45"
                 />
               </label>
             </div>
           </div>
         ))}
-  
+
         <button
           type="button"
           onClick={() => addSet(ex._id)}
-          className="rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-medium text-sky-700 hover:bg-sky-100"
+          className="inline-flex items-center gap-1.5 rounded-full border border-volt-300/30 bg-volt-300/10 px-4 py-1.5 text-xs font-semibold text-volt-300 transition-all hover:bg-volt-300/20 active:translate-y-0"
         >
-          + Add Set
+          <span>+ Add Set</span>
         </button>
       </div>
     )
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
-      {loading ? (
-        <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600 shadow-sm">
-          Loading workout...
-        </div>
-      ) : !workout ? (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700 shadow-sm">
-          Workout not found.
-        </div>
-      ) : (
-        <>
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-              Session for: {workout.name}
-            </h1>
-            <p className="mt-1 text-sm text-slate-600">
-              Log your sets for each exercise in this workout.
-            </p>
+    <div className="relative min-h-screen px-4 pt-28 pb-20 sm:px-6">
+      {/* Ambient background glow */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div className="grid-bg absolute inset-0 opacity-40 [mask-image:radial-gradient(ellipse_70%_50%_at_50%_0%,#000,transparent_80%)]" />
+        <div className="animate-orb absolute top-20 right-10 h-96 w-96 rounded-full bg-volt-300/10 blur-[100px]" />
+      </div>
+
+      <div className="mx-auto max-w-4xl">
+        {loading ? (
+          <div className="glass-strong h-64 animate-pulse rounded-3xl border border-white/8 p-8" />
+        ) : !workout ? (
+          <div className="glass-strong rounded-3xl border border-rose-500/30 bg-rose-500/10 p-10 text-center text-rose-300">
+            Workout routine not found.
+            <div className="mt-4">
+              <Link href="/workout-session" className="text-volt-300 underline">
+                Return to sessions
+              </Link>
+            </div>
           </div>
-
-          {error && (
-            <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-              {error}
-            </div>
-          )}
-
-          {success && (
-            <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-              {success}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-              {workoutExercises.length === 0 ? (
-                <p className="text-sm text-slate-600">
-                  This workout has no exercises attached yet.
+        ) : (
+          <>
+            <div className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-white/8 pb-6">
+              <div>
+                <span className="inline-flex items-center gap-2 rounded-full border border-volt-300/25 bg-volt-300/10 px-3 py-1 text-[0.7rem] font-semibold tracking-[0.16em] text-volt-300 uppercase">
+                  Active Logger
+                </span>
+                <h1 className="mt-3 font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                  Session: <span className="text-gradient">{workout.name}</span>
+                </h1>
+                <p className="mt-2 text-sm text-white/60">
+                  Log your sets, weight load, reps, and durations as you complete them.
                 </p>
-              ) : (
-                <div className="space-y-4">
-                  {workoutExercises.map((ex) => {
-                    const value = inputs[ex._id] || {
-                      reps: "",
-                      weight: "",
-                      duration: "",
-                    }
-                    return (
-                      <div
-                        key={ex._id}
-                        className="rounded-lg border border-slate-200 px-3 py-3"
-                      >
-                        {renderSets(value, ex)}
-                        <div className="mb-2 flex items-baseline justify-between gap-3">
-                          <div>
-                            <h2 className="text-sm font-semibold text-slate-900">
-                              {ex.name}
-                            </h2>
-                            <p className="text-xs text-slate-600">
-                              {ex.muscleGroup}
-                              {ex.equipment ? ` • ${ex.equipment}` : ""}
-                            </p>
-                          </div>
-                        </div>
-
-                       
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
+              </div>
+              <Link
+                href="/workout-session"
+                className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white/80 backdrop-blur-md transition-colors hover:border-white/30 hover:bg-white/10 hover:text-white"
+              >
+                <Icon name="arrow" className="h-4 w-4 rotate-180" />
+                Change workout
+              </Link>
             </div>
 
-            <button
-              type="submit"
-              disabled={submitting || workoutExercises.length === 0}
-              className="inline-flex h-10 items-center justify-center rounded-md bg-sky-600 px-4 text-sm font-medium text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {submitting ? "Saving session…" : "Save session"}
-            </button>
-          </form>
-        </>
-      )}
+            {error && (
+              <div className="mb-6 flex items-start gap-2.5 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300 backdrop-blur-md">
+                <Icon name="close" className="mt-0.5 h-4 w-4 shrink-0 text-rose-400" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {success && (
+              <div className="mb-6 flex items-start gap-2.5 rounded-xl border border-volt-300/30 bg-volt-300/10 px-4 py-3 text-sm text-volt-300 backdrop-blur-md">
+                <Icon name="check" className="mt-0.5 h-4 w-4 shrink-0 text-volt-300" />
+                <span>{success}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {workoutExercises.length === 0 ? (
+                <div className="glass-strong rounded-3xl border border-white/10 p-8 text-center text-sm text-white/60">
+                  This workout has no exercises attached yet.
+                </div>
+              ) : (
+                workoutExercises.map((ex) => {
+                  const value = inputs[ex._id] || {
+                    sets: [{ reps: "", weight: "", duration: "" }],
+                  }
+                  return (
+                    <div
+                      key={ex._id}
+                      className="glass-strong rounded-3xl border border-white/10 p-6 shadow-2xl backdrop-blur-xl"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/8 pb-4">
+                        <div>
+                          <h2 className="font-display text-xl font-semibold text-white">
+                            {ex.name}
+                          </h2>
+                          <p className="mt-1 text-xs text-white/50">
+                            {ex.category || "General"}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="rounded-full border border-volt-300/25 bg-volt-300/10 px-3 py-1 text-xs font-semibold text-volt-300 uppercase">
+                            {ex.muscleGroup}
+                          </span>
+                          {ex.equipment && (
+                            <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white/60">
+                              {ex.equipment}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {renderSets(value, ex)}
+                    </div>
+                  )
+                })
+              )}
+
+              <div className="flex items-center justify-end gap-4 pt-2">
+                <Link
+                  href="/workout-session"
+                  className="rounded-full border border-white/15 bg-white/5 px-6 py-3 text-sm font-medium text-white/70 hover:text-white"
+                >
+                  Cancel
+                </Link>
+                <button
+                  type="submit"
+                  disabled={submitting || workoutExercises.length === 0}
+                  className="inline-flex items-center gap-2 rounded-full bg-volt-300 px-7 py-3 text-sm font-semibold text-ink-950 shadow-[0_12px_34px_-12px_rgba(214,255,102,0.65)] transition-all hover:-translate-y-0.5 hover:bg-volt-200 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {submitting ? "Recording session…" : "Complete & save session"}
+                  <Icon name="check" className="h-4 w-4" />
+                </button>
+              </div>
+            </form>
+          </>
+        )}
+      </div>
     </div>
   )
 }

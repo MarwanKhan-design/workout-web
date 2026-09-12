@@ -1,13 +1,11 @@
 "use client"
 
-import AreaProgressChart from "@/components/charts/AreaProgressChart"
-import ActivityHeatmap from "@/components/charts/HeatMap"
-import SessionsChart from "@/components/charts/line-chart"
 import ChartsCard from "@/components/charts/StatsCards"
-import StatsCard from "@/components/charts/StatsCards"
 import { apiFetch } from "@/lib/api"
 import type { Workout } from "@/lib/types"
 import { useEffect, useMemo, useState } from "react"
+import { Icon } from "@/components/ui"
+import Link from "next/link"
 
 type WorkoutSession = {
   _id: string
@@ -25,26 +23,36 @@ export default function MyProgressPage() {
   const [workouts, setWorkouts] = useState<Workout[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const chartData = sessions.map((session) => ({
-    date: formatDate(session.date),
-    value: session.exercises.length,
-  }))
 
-  
-  const heatmapData = Object.values(
-    sessions.reduce((acc, session) => {
-      const date = session.date.split("T")[0]
-  
-      if (!acc[date]) {
-        acc[date] = { date, count: 0 }
-      }
-  
-      acc[date].count += 1
-  
-      return acc
-    }, {} as Record<string, { date: string; count: number }>)
-  )
-  
+  function formatDate(dateStr: string) {
+    const d = new Date(dateStr)
+    if (Number.isNaN(d.getTime())) return dateStr
+    return d.toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    })
+  }
+
+  const chartData = useMemo(() => {
+    return sessions.map((session) => ({
+      date: formatDate(session.date),
+      value: session.exercises.length,
+    }))
+  }, [sessions])
+
+  const heatmapData = useMemo(() => {
+    return Object.values(
+      sessions.reduce((acc, session) => {
+        const date = session.date.split("T")[0]
+        if (!acc[date]) {
+          acc[date] = { date, count: 0 }
+        }
+        acc[date].count += 1
+        return acc
+      }, {} as Record<string, { date: string; count: number }>)
+    )
+  }, [sessions])
 
   useEffect(() => {
     async function load() {
@@ -76,30 +84,28 @@ export default function MyProgressPage() {
 
   const workoutNameById = useMemo(() => {
     const map: Record<string, string> = {}
-  
     workouts.forEach((w) => {
       if (w._id) {
         map[String(w._id)] = w.name
       }
     })
-  
     return map
   }, [workouts])
 
   const stats = useMemo(() => {
     if (!sessions.length) return null
-  
+
     const totalSessions = sessions.length
-  
+
     const totalSets = sessions.reduce((sessionSum, session) => {
       const sessionSets =
         session.exercises?.reduce((exerciseSum, exercise) => {
           return exerciseSum + (exercise.sets?.length ?? 0)
         }, 0) ?? 0
-  
+
       return sessionSum + sessionSets
     }, 0)
-  
+
     const first = sessions
       .slice()
       .sort(
@@ -107,7 +113,7 @@ export default function MyProgressPage() {
           new Date(a.date).getTime() -
           new Date(b.date).getTime()
       )[0]
-  
+
     const last = sessions
       .slice()
       .sort(
@@ -115,7 +121,7 @@ export default function MyProgressPage() {
           new Date(b.date).getTime() -
           new Date(a.date).getTime()
       )[0]
-  
+
     return {
       totalSessions,
       totalSets,
@@ -123,130 +129,162 @@ export default function MyProgressPage() {
       last,
     }
   }, [sessions])
-  
-  function formatDate(dateStr: string) {
-    const d = new Date(dateStr)
-    if (Number.isNaN(d.getTime())) return dateStr
-    return d.toLocaleDateString("en-GB", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    }) // e.g. 5 Aug 2020
-  }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-          My progress
-        </h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Overview of your workout history and logged sessions.
-        </p>
+    <div className="relative min-h-screen px-4 pt-28 pb-20 sm:px-6">
+      {/* Ambient background glow */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div className="grid-bg absolute inset-0 opacity-40 [mask-image:radial-gradient(ellipse_70%_50%_at_50%_0%,#000,transparent_80%)]" />
+        <div className="animate-orb absolute top-20 right-10 h-96 w-96 rounded-full bg-volt-300/10 blur-[100px]" />
+        <div className="animate-orb absolute top-96 left-10 h-80 w-80 rounded-full bg-aqua-400/10 blur-[90px]" style={{ animationDelay: "-8s" }} />
       </div>
 
-      {loading ? (
-        <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600 shadow-sm">
-          Loading progress...
+      <div className="mx-auto max-w-6xl space-y-8">
+        <div className="flex flex-wrap items-end justify-between gap-4 border-b border-white/8 pb-6">
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full border border-volt-300/25 bg-volt-300/10 px-3 py-1 text-[0.7rem] font-semibold tracking-[0.16em] text-volt-300 uppercase">
+              Performance Analytics
+            </span>
+            <h1 className="mt-3 font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
+              Training <span className="text-gradient">Progress</span>
+            </h1>
+            <p className="mt-2 text-sm text-white/60">
+              Review your training consistency, frequency trends, and recorded workout history.
+            </p>
+          </div>
+
+          <Link
+            href="/workout-session"
+            className="inline-flex items-center gap-2 rounded-full bg-volt-300 px-5 py-2.5 text-sm font-semibold text-ink-950 shadow-[0_12px_34px_-12px_rgba(214,255,102,0.65)] hover:bg-volt-200 transition-all"
+          >
+            <Icon name="play" className="h-4 w-4" />
+            <span>New session</span>
+          </Link>
         </div>
-      ) : error ? (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700 shadow-sm">
-          {error}
-        </div>
-      ) : (
-        <>
-          {/* Top summary card */}
-          <section className="mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">
-              Summary
-            </h2>
-            {!stats ? (
-              <p className="mt-3 text-sm text-slate-600">
-                No workout sessions logged yet. Start a session from the home page or
-                the workout session section.
-              </p>
-            ) : (
-              <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-4">
-                <div className="rounded-lg bg-slate-50 p-3">
-                  <p className="text-xs text-slate-500">Total sessions</p>
-                  <p className="mt-1 text-xl font-semibold text-slate-900">
-                    {stats.totalSessions}
-                  </p>
+
+        {loading ? (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+            {[1, 2, 3, 4].map((n) => (
+              <div key={n} className="glass-strong h-28 animate-pulse rounded-2xl border border-white/8 p-5" />
+            ))}
+          </div>
+        ) : error ? (
+          <div className="flex items-start gap-2.5 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-5 text-sm text-rose-300 backdrop-blur-md">
+            <Icon name="close" className="mt-0.5 h-4 w-4 shrink-0 text-rose-400" />
+            <span>{error}</span>
+          </div>
+        ) : (
+          <>
+            {/* Top summary cards */}
+            <section className="space-y-3">
+              <h2 className="font-display text-lg font-semibold text-white">
+                Key Metrics
+              </h2>
+              {!stats ? (
+                <div className="glass-strong rounded-3xl border border-white/10 p-8 text-center text-sm text-white/50">
+                  No workout sessions logged yet. Start a session from the workouts section to track your gains.
                 </div>
-                <div className="rounded-lg bg-slate-50 p-3">
-                  <p className="text-xs text-slate-500">Total sets logged</p>
-                  <p className="mt-1 text-xl font-semibold text-slate-900">
-                    {stats.totalSets}
-                  </p>
+              ) : (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="glass-strong rounded-2xl border border-white/10 p-5 shadow-xl backdrop-blur-xl">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/45">
+                      Total sessions
+                    </p>
+                    <p className="mt-2 font-display text-3xl font-bold text-volt-300 tabular-nums">
+                      {stats.totalSessions}
+                    </p>
+                  </div>
+
+                  <div className="glass-strong rounded-2xl border border-white/10 p-5 shadow-xl backdrop-blur-xl">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/45">
+                      Total sets logged
+                    </p>
+                    <p className="mt-2 font-display text-3xl font-bold text-white tabular-nums">
+                      {stats.totalSets}
+                    </p>
+                  </div>
+
+                  <div className="glass-strong rounded-2xl border border-white/10 p-5 shadow-xl backdrop-blur-xl">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/45">
+                      First session
+                    </p>
+                    <p className="mt-2 font-display text-lg font-semibold text-white">
+                      {formatDate(stats.first.date)}
+                    </p>
+                  </div>
+
+                  <div className="glass-strong rounded-2xl border border-white/10 p-5 shadow-xl backdrop-blur-xl">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/45">
+                      Last session
+                    </p>
+                    <p className="mt-2 font-display text-lg font-semibold text-volt-300">
+                      {formatDate(stats.last.date)}
+                    </p>
+                  </div>
                 </div>
-                <div className="rounded-lg bg-slate-50 p-3">
-                  <p className="text-xs text-slate-500">First session</p>
-                  <p className="mt-1 text-sm font-medium text-slate-900">
-                    {formatDate(stats.first.date)}
-                  </p>
-                </div>
-                <div className="rounded-lg bg-slate-50 p-3">
-                  <p className="text-xs text-slate-500">Last session</p>
-                  <p className="mt-1 text-sm font-medium text-slate-900">
-                    {formatDate(stats.last.date)}
-                  </p>
-                </div>
+              )}
+            </section>
+
+            {/* Visual Charts */}
+            <section className="space-y-3">
+              <ChartsCard
+                sessionsData={chartData}
+                progressData={chartData}
+                heatmapData={heatmapData}
+              />
+            </section>
+
+            {/* Sessions list */}
+            <section className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="font-display text-lg font-semibold text-white">
+                  Session History
+                </h2>
+                <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white/60">
+                  {sessions.length} recorded
+                </span>
               </div>
-            )}
-          </section>
 
-          {/* Sessions list */}
-          <section className="space-y-3">
-            <h2 className="text-sm font-semibold text-slate-900">
-              All sessions
-            </h2>
-
-            {!sessions.length ? (
-              <p className="text-sm text-slate-600">
-                No sessions to show yet.
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {sessions
-                  .slice()
-                  .sort(
-                    (a, b) =>
-                      new Date(b.date).getTime() - new Date(a.date).getTime()
-                  )
-                  .map((s) => {
-                    const name =  workoutNameById[s.workoutId]
-                    const sets = s.exercises?.length ?? 0
-                    return (
-                      <div
-                        key={s._id}
-                        className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm"
-                      >
-                        <div className="min-w-0">
-                          <p className="truncate font-medium text-slate-900">
-                            {name}
-                          </p>
-                          <p className="text-xs text-slate-600">
-                            {formatDate(s.date)} • {sets} set
-                            {sets === 1 ? "" : "s"}
-                          </p>
-                        </div>
-                      </div>
+              {!sessions.length ? (
+                <div className="glass-strong rounded-2xl border border-white/10 p-8 text-center text-sm text-white/50">
+                  No sessions recorded yet.
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {sessions
+                    .slice()
+                    .sort(
+                      (a, b) =>
+                        new Date(b.date).getTime() - new Date(a.date).getTime()
                     )
-                  })}
-              </div>
-            )}
-          </section>
-        </>
-      )}
-{/* Charts */}
-<div className="p-4">
-
-<ChartsCard
-        sessionsData={chartData}
-        progressData={chartData}
-        heatmapData={heatmapData}
-        />
+                    .map((s) => {
+                      const name = workoutNameById[s.workoutId] || "Custom Workout"
+                      const sets = s.exercises?.length ?? 0
+                      return (
+                        <div
+                          key={s._id}
+                          className="glass-strong card-hover group flex items-center justify-between rounded-2xl border border-white/8 p-4 text-sm backdrop-blur-xl transition-all duration-300 hover:border-volt-300/30"
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate font-display text-base font-semibold text-white transition-colors group-hover:text-volt-300">
+                              {name}
+                            </p>
+                            <p className="mt-1 text-xs text-white/50">
+                              {formatDate(s.date)} • {sets} {sets === 1 ? "exercise" : "exercises"} completed
+                            </p>
+                          </div>
+                          <span className="rounded-full border border-volt-300/20 bg-volt-300/10 px-3 py-1 text-xs font-semibold text-volt-300">
+                            Completed
+                          </span>
+                        </div>
+                      )
+                    })}
+                </div>
+              )}
+            </section>
+          </>
+        )}
+      </div>
     </div>
-        </div>
   )
 }

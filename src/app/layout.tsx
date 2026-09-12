@@ -1,14 +1,21 @@
-import Navbar from '@/components/Navbar'
 import './globals.css'
-import { Inter } from 'next/font/google'
+import { Inter, Inter_Tight } from 'next/font/google'
 import AuthCheck from '@/lib/AuthCheck'
-import Footer from '@/components/Footer'
+import Navbar from '@/components/Navbar'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-sans',
+})
+
+const interTight = Inter_Tight({
+  subsets: ['latin'],
+  variable: '--font-display',
+})
 
 export const metadata = {
-  title: 'Next.js Express-style App',
-  description: 'A Next.js app with API routes acting as Express backend',
+  title: 'Workout Web — Train with intent. Progress you can see.',
+  description: 'The training app for people who want the habit to stick. Beautiful sessions, honest data, and a plan that adapts to your life.',
 }
 
 export default function RootLayout({
@@ -17,14 +24,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      
-      <body className={inter.className}> <Navbar /> 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <html lang="en" className="dark scroll-smooth">
+      <body className={`${inter.variable} ${interTight.variable} font-sans bg-ink-950 text-white min-h-screen antialiased selection:bg-volt-300 selection:text-ink-950`}>
         <AuthCheck />
-      {children}
-      <Footer />
-      </main>
+        <Navbar />
+        {children}
       </body>
     </html>
   )

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { apiFetch } from "@/lib/api"
 import { Exercise } from "@/lib/types"
 import ExerciseCard from "@/components/ExerciseCard"
+import { Icon } from "@/components/ui"
 
 export default function ExercisesPage() {
   const [exercises, setExercises] = useState<Exercise[]>([])
@@ -45,20 +46,12 @@ export default function ExercisesPage() {
         method: "POST",
         body: JSON.stringify({
           name: form.name.trim(),
-          category: form.category.trim(),
+          category: form.category.trim() || undefined,
           muscleGroup: form.muscleGroup.trim(),
-          equipment: form.equipment.trim(),
-          description: form.description.trim(),
+          equipment: form.equipment.trim() || undefined,
+          description: form.description.trim() || undefined,
         }),
       })
-
-      if (!created || typeof created !== "object" || !("_id" in created)) {
-        const msg =
-          (created as any)?.message ||
-          "Failed to create exercise. Please check the form and try again."
-        setError(msg)
-        return
-      }
 
       setExercises((prev) => [created, ...prev])
       setForm({
@@ -76,75 +69,95 @@ export default function ExercisesPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
-      <div className="mb-6 flex items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            Exercises
-          </h1>
-          <p className="mt-1 text-sm text-slate-600">
-            Browse exercises on the left, or create a new one on the right.
-          </p>
-        </div>
-        <div className="text-sm text-slate-600">
-          <span className="font-medium text-slate-900">{exercises.length}</span>{" "}
-          total
-        </div>
+    <div className="relative min-h-screen px-4 pt-28 pb-20 sm:px-6">
+      {/* Ambient background glow */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div className="grid-bg absolute inset-0 opacity-40 [mask-image:radial-gradient(ellipse_70%_50%_at_50%_0%,#000,transparent_80%)]" />
+        <div className="animate-orb absolute top-20 left-10 h-96 w-96 rounded-full bg-volt-300/10 blur-[100px]" />
+        <div className="animate-orb absolute top-96 right-10 h-80 w-80 rounded-full bg-aqua-400/10 blur-[90px]" style={{ animationDelay: "-6s" }} />
       </div>
 
-      {error && (
-        <div className="mb-6 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          {error}
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-white/8 pb-6">
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full border border-volt-300/25 bg-volt-300/10 px-3 py-1 text-[0.7rem] font-semibold tracking-[0.16em] text-volt-300 uppercase">
+              Exercise Library
+            </span>
+            <h1 className="mt-3 font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
+              Exercise <span className="text-gradient">Directory</span>
+            </h1>
+            <p className="mt-2 text-sm text-white/60">
+              Browse movement patterns or register new custom exercises for your routines.
+            </p>
+          </div>
+          <div className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-xs text-white/70">
+            <span className="font-semibold text-volt-300">{exercises.length}</span>{" "}
+            exercises in database
+          </div>
         </div>
-      )}
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-slate-900">
-            Exercise list
-          </h2>
+        {error && (
+          <div className="mb-6 flex items-start gap-2.5 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300 backdrop-blur-md">
+            <Icon name="close" className="mt-0.5 h-4 w-4 shrink-0 text-rose-400" />
+            <span>{error}</span>
+          </div>
+        )}
 
-          {loading ? (
-            <div className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-600">
-              Loading exercises…
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+          <section className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-display text-lg font-semibold text-white">
+                Available Exercises
+              </h2>
             </div>
-          ) : exercises.length === 0 ? (
-            <div className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-600">
-              No exercises yet. Create your first one.
-            </div>
-          ) : (
-            <div className="grid gap-3">
-              {exercises.map((ex) => (
-                <ExerciseCard key={ex._id} exercise={ex} />
-              ))}
-            </div>
-          )}
-        </section>
 
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-slate-900">
-            Create an exercise
-          </h2>
+            {loading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((n) => (
+                  <div
+                    key={n}
+                    className="glass-strong h-28 animate-pulse rounded-2xl border border-white/8 p-5"
+                  />
+                ))}
+              </div>
+            ) : exercises.length === 0 ? (
+              <div className="glass-strong rounded-2xl border border-white/10 p-8 text-center text-sm text-white/50">
+                No exercises registered yet. Use the form on the right to add one.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {exercises.map((ex) => (
+                  <ExerciseCard key={ex._id} exercise={ex} />
+                ))}
+              </div>
+            )}
+          </section>
 
-          <form
-            onSubmit={onCreateExercise}
-            className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
-          >
-            <div className="grid gap-3">
-              <label className="grid gap-1">
-                <span className="text-xs font-medium text-slate-700">Name *</span>
+          <section className="space-y-4">
+            <h2 className="font-display text-lg font-semibold text-white">
+              Create an exercise
+            </h2>
+
+            <form
+              onSubmit={onCreateExercise}
+              className="glass-strong rounded-3xl border border-white/10 p-6 sm:p-7 shadow-2xl backdrop-blur-xl space-y-4"
+            >
+              <label className="block space-y-1.5">
+                <span className="text-xs font-semibold uppercase tracking-[0.14em] text-white/70">
+                  Exercise Name *
+                </span>
                 <input
                   value={form.name}
                   onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
                   required
-                  className="h-10 rounded-md border border-slate-300 px-3 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-sky-500"
-                  placeholder="e.g. Barbell Squat"
+                  className="glass h-11 w-full rounded-xl border border-white/12 bg-white/[0.04] px-4 text-sm text-white placeholder-white/35 transition-all outline-none focus:border-volt-300/60 focus:bg-white/[0.08] focus:ring-2 focus:ring-volt-300/20"
+                  placeholder="e.g. Bulgarian Split Squat"
                 />
               </label>
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <label className="grid gap-1">
-                  <span className="text-xs font-medium text-slate-700">
+                <label className="block space-y-1.5">
+                  <span className="text-xs font-semibold uppercase tracking-[0.14em] text-white/70">
                     Category
                   </span>
                   <input
@@ -152,28 +165,29 @@ export default function ExercisesPage() {
                     onChange={(e) =>
                       setForm((p) => ({ ...p, category: e.target.value }))
                     }
-                    className="h-10 rounded-md border border-slate-300 px-3 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-sky-500"
-                    placeholder="Strength"
+                    className="glass h-11 w-full rounded-xl border border-white/12 bg-white/[0.04] px-4 text-sm text-white placeholder-white/35 transition-all outline-none focus:border-volt-300/60 focus:bg-white/[0.08] focus:ring-2 focus:ring-volt-300/20"
+                    placeholder="Strength, Mobility, HIIT"
                   />
                 </label>
 
-                <label className="grid gap-1">
-                  <span className="text-xs font-medium text-slate-700">
-                    Muscle group
+                <label className="block space-y-1.5">
+                  <span className="text-xs font-semibold uppercase tracking-[0.14em] text-white/70">
+                    Muscle Group *
                   </span>
                   <input
                     value={form.muscleGroup}
                     onChange={(e) =>
                       setForm((p) => ({ ...p, muscleGroup: e.target.value }))
                     }
-                    className="h-10 rounded-md border border-slate-300 px-3 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-sky-500"
-                    placeholder="Legs"
+                    required
+                    className="glass h-11 w-full rounded-xl border border-white/12 bg-white/[0.04] px-4 text-sm text-white placeholder-white/35 transition-all outline-none focus:border-volt-300/60 focus:bg-white/[0.08] focus:ring-2 focus:ring-volt-300/20"
+                    placeholder="Quads, Chest, Back"
                   />
                 </label>
               </div>
 
-              <label className="grid gap-1">
-                <span className="text-xs font-medium text-slate-700">
+              <label className="block space-y-1.5">
+                <span className="text-xs font-semibold uppercase tracking-[0.14em] text-white/70">
                   Equipment
                 </span>
                 <input
@@ -181,14 +195,14 @@ export default function ExercisesPage() {
                   onChange={(e) =>
                     setForm((p) => ({ ...p, equipment: e.target.value }))
                   }
-                  className="h-10 rounded-md border border-slate-300 px-3 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-sky-500"
-                  placeholder="Barbell"
+                  className="glass h-11 w-full rounded-xl border border-white/12 bg-white/[0.04] px-4 text-sm text-white placeholder-white/35 transition-all outline-none focus:border-volt-300/60 focus:bg-white/[0.08] focus:ring-2 focus:ring-volt-300/20"
+                  placeholder="Barbell, Dumbbells, Bodyweight"
                 />
               </label>
 
-              <label className="grid gap-1">
-                <span className="text-xs font-medium text-slate-700">
-                  Description
+              <label className="block space-y-1.5">
+                <span className="text-xs font-semibold uppercase tracking-[0.14em] text-white/70">
+                  Description / Coaching Cues
                 </span>
                 <textarea
                   value={form.description}
@@ -196,21 +210,22 @@ export default function ExercisesPage() {
                     setForm((p) => ({ ...p, description: e.target.value }))
                   }
                   rows={4}
-                  className="resize-none rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-sky-500"
-                  placeholder="Short notes or cues…"
+                  className="glass w-full rounded-xl border border-white/12 bg-white/[0.04] p-4 text-sm text-white placeholder-white/35 transition-all outline-none resize-none focus:border-volt-300/60 focus:bg-white/[0.08] focus:ring-2 focus:ring-volt-300/20"
+                  placeholder="Key form cues, range of motion notes, setup reminders…"
                 />
               </label>
 
               <button
                 type="submit"
                 disabled={submitting}
-                className="inline-flex h-10 items-center justify-center rounded-md bg-sky-600 px-4 text-sm font-medium text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-volt-300 px-5 text-sm font-semibold text-ink-950 shadow-[0_12px_34px_-12px_rgba(214,255,102,0.65)] transition-all hover:-translate-y-0.5 hover:bg-volt-200 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {submitting ? "Creating…" : "Create exercise"}
+                {submitting ? "Creating exercise…" : "Create exercise"}
+                <Icon name="arrow" className="h-4 w-4" />
               </button>
-            </div>
-          </form>
-        </section>
+            </form>
+          </section>
+        </div>
       </div>
     </div>
   )
