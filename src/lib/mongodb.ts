@@ -28,10 +28,14 @@ export default async function dbConnect() {
 
   if (!cached.promise) {
     const opts = {
-      bufferCommands: false
+      bufferCommands: false,
     }
 
-    cached.promise = mongoose.connect(MONGODB_URI, opts)
+    cached.promise = mongoose.connect(MONGODB_URI, opts).catch((err) => {
+      // Reset so the next request retries the connection
+      cached.promise = null
+      throw err
+    })
   }
 
   cached.conn = await cached.promise

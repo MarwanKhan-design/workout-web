@@ -1,54 +1,17 @@
 export const dynamic = "force-dynamic";
 
-import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/mongodb";
+import { NextRequest } from "next/server";
+import { toNextHandler } from "@/lib/api-handler";
 import * as exerciseController from "@/controllers/Exercise";
 
-function toNextHandler(controller: any) {
-  return async (req: NextRequest, { params }: { params: { id: string } }) => {
-    await dbConnect();
-    const body = req.method === "GET" ? {} : await req.json().catch(() => ({}));
-    const cookiesArr = req.cookies.getAll();
-    const cookies = Object.fromEntries(
-      cookiesArr.map((c) => [c.name, c.value])
-    );
-    const headers = Object.fromEntries(req.headers.entries());
-    let status = 200;
-    let jsonData: any = {};
-    const res = {
-      status(code: number) {
-        status = code;
-        return this;
-      },
-      json(data: any) {
-        jsonData = data;
-        return this;
-      },
-    };
-    if (req.method === "GET")
-      await controller.getExerciseById(
-        { params: { id: params.id }, cookies, headers },
-        res
-      );
-    else if (req.method === "PUT")
-      await controller.updateExercise(
-        { params: { id: params.id }, body, cookies, headers },
-        res
-      );
-    else if (req.method === "DELETE")
-      await controller.deleteExercise(
-        { params: { id: params.id }, cookies, headers },
-        res
-      );
-    else
-      return NextResponse.json(
-        { message: "Method not allowed" },
-        { status: 405 }
-      );
-    return NextResponse.json(jsonData, { status });
-  };
+export async function GET(req: NextRequest, context: { params: { id: string } }) {
+  return toNextHandler(exerciseController.getExerciseById)(req, context);
 }
 
-export const GET = toNextHandler(exerciseController);
-export const PUT = toNextHandler(exerciseController);
-export const DELETE = toNextHandler(exerciseController);
+export async function PUT(req: NextRequest, context: { params: { id: string } }) {
+  return toNextHandler(exerciseController.updateExercise)(req, context);
+}
+
+export async function DELETE(req: NextRequest, context: { params: { id: string } }) {
+  return toNextHandler(exerciseController.deleteExercise)(req, context);
+}

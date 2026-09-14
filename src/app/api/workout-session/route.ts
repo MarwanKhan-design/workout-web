@@ -1,42 +1,13 @@
 export const dynamic = "force-dynamic";
 
-import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/mongodb";
+import { NextRequest } from "next/server";
+import { toNextHandler } from "@/lib/api-handler";
 import * as workoutSessionController from "@/controllers/WorkoutSession";
 
-function toNextHandler(controller: any) {
-  return async (req: NextRequest) => {
-    await dbConnect();
-    const body = req.method === "GET" ? {} : await req.json().catch(() => ({}));
-    const cookiesArr = req.cookies.getAll();
-    const cookies = Object.fromEntries(
-      cookiesArr.map((c) => [c.name, c.value])
-    );
-    const headers = Object.fromEntries(req.headers.entries());
-    let status = 200;
-    let jsonData: any = {};
-    const res = {
-      status(code: number) {
-        status = code;
-        return this;
-      },
-      json(data: any) {
-        jsonData = data;
-        return this;
-      },
-    };
-    if (req.method === "POST")
-      await controller.createWorkoutSession({ body, cookies, headers }, res);
-    else if (req.method === "GET")
-      await controller.getWorkoutSessions({ cookies, headers }, res);
-    else
-      return NextResponse.json(
-        { message: "Method not allowed" },
-        { status: 405 }
-      );
-    return NextResponse.json(jsonData, { status });
-  };
+export async function GET(req: NextRequest) {
+  return toNextHandler(workoutSessionController.getWorkoutSessions)(req);
 }
 
-export const POST = toNextHandler(workoutSessionController);
-export const GET = toNextHandler(workoutSessionController);
+export async function POST(req: NextRequest) {
+  return toNextHandler(workoutSessionController.createWorkoutSession)(req);
+}
