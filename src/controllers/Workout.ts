@@ -7,12 +7,8 @@ import { authenticateRequest } from "@/lib/auth";
 export const createWorkout = async (req: Request, res: Response) => {
   const userId = authenticateRequest(req);
   try {
-    const { name, description, exercises, } = req.body;
-    if (
-      !name ||
-      !Array.isArray(exercises) ||
-      exercises.length === 0
-    ) {
+    const { name, description, exercises } = req.body;
+    if (!name || !Array.isArray(exercises) || exercises.length === 0) {
       return res
         .status(400)
         .json({ message: "userId, name, and exercises are required" });

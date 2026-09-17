@@ -1,60 +1,59 @@
 import { Request, Response } from "express";
 import WorkoutSession from "../models/WorkoutSession";
 import jwt from "jsonwebtoken";
+import { authenticateRequest } from "@/lib/auth";
+import Workout from "@/models/Workout";
 
 // Create a new workout session (userId must match JWT user)
 export const createWorkoutSession = async (req: Request, res: Response) => {
+  const userId = authenticateRequest(req);
+
   try {
-    const { userId, workoutId, date, exercises } = req.body;
+    const { workoutId, date, exercises } = req.body;
+
     if (
-      !userId ||
       !workoutId ||
       !date ||
       !Array.isArray(exercises) ||
       exercises.length === 0
     ) {
-      return res
-        .status(400)
-        .json({
-          message: "userId, workoutId, date, and exercises are required",
-        });
+      return res.status(400).json({
+        message: "Workout, date, and exercises are required",
+      });
     }
-    // Get token from cookies or headers
-    const token =
-      req.cookies?.token || req.headers["authorization"]?.split(" ")[1];
-    if (!token) {
-      return res.status(401).json({ message: "No token provided" });
+
+    const workout = await Workout.findOne({
+      _id: workoutId,
+      userId,
+    });
+
+    if (!workout) {
+      return res.status(404).json({
+        message: "Workout not found",
+      });
     }
-    const secret = process.env.JWT_SECRET;
-    if (!secret) throw new Error("JWT_SECRET not set");
-    let decoded: any;
-    try {
-      decoded = jwt.verify(token, secret);
-    } catch {
-      return res.status(401).json({ message: "Invalid or expired token" });
-    }
-    if (!decoded.sub || decoded.sub !== userId) {
-      return res
-        .status(403)
-        .json({ message: "userId does not match authenticated user" });
-    }
-    const session = new WorkoutSession({ userId, workoutId, date, exercises });
+
+    const session = new WorkoutSession({
+      userId,
+      workoutId,
+      date,
+      exercises,
+    });
+
     await session.save();
+
     res.status(201).json(session);
   } catch (err) {
-    res
-      .status(500)
-      .json({
-        message: "Failed to create workout session",
-        error: (err as Error).message,
-      });
+    throw err;
   }
 };
 
 // Get all workout sessions
 export const getWorkoutSessions = async (req: Request, res: Response) => {
+  const userId = authenticateRequest(req);
+
   try {
-    const sessions = await WorkoutSession.find();
+    const sessions = await WorkoutSession.find({ userId });
     res.json(sessions);
   } catch (err) {
     res.status(500).json({
@@ -66,8 +65,13 @@ export const getWorkoutSessions = async (req: Request, res: Response) => {
 
 // Get workout session by ID
 export const getWorkoutSessionById = async (req: Request, res: Response) => {
+  const userId = authenticateRequest(req);
+
   try {
-    const session = await WorkoutSession.findById(req.params.id);
+    const session = await WorkoutSession.findOne({
+      _id: req.params.id,
+      userId,
+    });
     if (!session)
       return res.status(404).json({ message: "Workout session not found" });
     res.json(session);
@@ -81,12 +85,14 @@ export const getWorkoutSessionById = async (req: Request, res: Response) => {
 
 // Update workout session
 export const updateWorkoutSession = async (req: Request, res: Response) => {
+  const userId = authenticateRequest(req);
+
   try {
-    const { userId, workoutId, date, exercises } = req.body;
-    const session = await WorkoutSession.findByIdAndUpdate(
-      req.params.id,
-      { userId, workoutId, date, exercises },
-      { new: true, runValidators: true }
+    const { workoutId, date, exercises } = req.body;
+    const session = await WorkoutSession.findOneAndUpdate(
+      { _id: req.params.id, userId },
+      { workoutId, date, exercises },
+      { new: true, runValidators: true },
     );
     if (!session)
       return res.status(404).json({ message: "Workout session not found" });
@@ -101,8 +107,12 @@ export const updateWorkoutSession = async (req: Request, res: Response) => {
 
 // Delete workout session
 export const deleteWorkoutSession = async (req: Request, res: Response) => {
+  const userId = authenticateRequest(req);
   try {
-    const session = await WorkoutSession.findByIdAndDelete(req.params.id);
+    const session = await WorkoutSession.findOneAndDelete({
+      _id: req.params.id,
+      userId,
+    });
     if (!session)
       return res.status(404).json({ message: "Workout session not found" });
     res.json({ message: "Workout session deleted" });
