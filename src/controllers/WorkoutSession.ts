@@ -1,51 +1,52 @@
 import { Request, Response } from "express";
 import WorkoutSession from "../models/WorkoutSession";
-import jwt from "jsonwebtoken";
 import { authenticateRequest } from "@/lib/auth";
 import Workout from "@/models/Workout";
-
+import mongoose from "mongoose";
 // Create a new workout session (userId must match JWT user)
 export const createWorkoutSession = async (req: Request, res: Response) => {
   const userId = authenticateRequest(req);
 
-  try {
-    const { workoutId, date, exercises } = req.body;
+  const { workoutId, date, exercises } = req.body;
 
-    if (
-      !workoutId ||
-      !date ||
-      !Array.isArray(exercises) ||
-      exercises.length === 0
-    ) {
-      return res.status(400).json({
-        message: "Workout, date, and exercises are required",
-      });
-    }
-
-    const workout = await Workout.findOne({
-      _id: workoutId,
-      userId,
+  if (
+    !workoutId ||
+    !date ||
+    !Array.isArray(exercises) ||
+    exercises.length === 0
+  ) {
+    return res.status(400).json({
+      message: "Workout, date, and exercises are required",
     });
-
-    if (!workout) {
-      return res.status(404).json({
-        message: "Workout not found",
-      });
-    }
-
-    const session = new WorkoutSession({
-      userId,
-      workoutId,
-      date,
-      exercises,
-    });
-
-    await session.save();
-
-    res.status(201).json(session);
-  } catch (err) {
-    throw err;
   }
+
+  if (!mongoose.isValidObjectId(workoutId)) {
+    return res.status(400).json({
+      message: "Invalid workout ID",
+    });
+  }
+
+  const workout = await Workout.findOne({
+    _id: workoutId,
+    userId,
+  });
+
+  if (!workout) {
+    return res.status(404).json({
+      message: "Workout not found",
+    });
+  }
+
+  const session = new WorkoutSession({
+    userId,
+    workoutId,
+    date,
+    exercises,
+  });
+
+  await session.save();
+
+  res.status(201).json(session);
 };
 
 // Get all workout sessions
@@ -68,8 +69,15 @@ export const getWorkoutSessionById = async (req: Request, res: Response) => {
   const userId = authenticateRequest(req);
 
   try {
+    const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({
+        message: "Invalid workout session ID",
+      });
+    }
     const session = await WorkoutSession.findOne({
-      _id: req.params.id,
+      _id: id,
       userId,
     });
     if (!session)
@@ -88,9 +96,16 @@ export const updateWorkoutSession = async (req: Request, res: Response) => {
   const userId = authenticateRequest(req);
 
   try {
+    const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({
+        message: "Invalid workout session ID",
+      });
+    }
     const { workoutId, date, exercises } = req.body;
     const session = await WorkoutSession.findOneAndUpdate(
-      { _id: req.params.id, userId },
+      { _id: id, userId },
       { workoutId, date, exercises },
       { new: true, runValidators: true },
     );
@@ -109,8 +124,15 @@ export const updateWorkoutSession = async (req: Request, res: Response) => {
 export const deleteWorkoutSession = async (req: Request, res: Response) => {
   const userId = authenticateRequest(req);
   try {
+    const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({
+        message: "Invalid workout session ID",
+      });
+    }
     const session = await WorkoutSession.findOneAndDelete({
-      _id: req.params.id,
+      _id: id,
       userId,
     });
     if (!session)

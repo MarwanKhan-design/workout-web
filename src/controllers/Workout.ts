@@ -1,13 +1,14 @@
 import { Request, Response } from "express";
 import Workout from "../models/Workout";
-import jwt from "jsonwebtoken";
 import { authenticateRequest } from "@/lib/auth";
+import mongoose from "mongoose";
 
 // Create a new workout (userId must match JWT user)
 export const createWorkout = async (req: Request, res: Response) => {
   const userId = authenticateRequest(req);
   try {
     const { name, description, exercises } = req.body;
+
     if (!name || !Array.isArray(exercises) || exercises.length === 0) {
       return res
         .status(400)
@@ -35,7 +36,14 @@ export const getWorkouts = async (req: Request, res: Response) => {
 export const getWorkoutById = async (req: Request, res: Response) => {
   const userId = authenticateRequest(req);
   try {
-    const workout = await Workout.findOne({ _id: req.params.id, userId });
+    const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({
+        message: "Invalid workout ID",
+      });
+    }
+    const workout = await Workout.findOne({ _id: id, userId });
     if (!workout) return res.status(404).json({ message: "Workout not found" });
     res.json(workout);
   } catch (err) {
@@ -50,9 +58,16 @@ export const getWorkoutById = async (req: Request, res: Response) => {
 export const updateWorkout = async (req: Request, res: Response) => {
   const userId = authenticateRequest(req);
   try {
+    const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({
+        message: "Invalid workout ID",
+      });
+    }
     const { name, description, exercises } = req.body;
     const workout = await Workout.findOneAndUpdate(
-      { _id: req.params.id, userId },
+      { _id: id, userId },
       { userId, name, description, exercises },
       { new: true, runValidators: true },
     );
@@ -70,8 +85,15 @@ export const updateWorkout = async (req: Request, res: Response) => {
 export const deleteWorkout = async (req: Request, res: Response) => {
   const userId = authenticateRequest(req);
   try {
+    const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({
+        message: "Invalid workout ID",
+      });
+    }
     const workout = await Workout.findOneAndDelete({
-      _id: req.params.id,
+      _id: id,
       userId,
     });
     if (!workout) return res.status(404).json({ message: "Workout not found" });
