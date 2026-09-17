@@ -104,6 +104,23 @@ export const updateWorkoutSession = async (req: Request, res: Response) => {
       });
     }
     const { workoutId, date, exercises } = req.body;
+
+    if (!mongoose.isValidObjectId(workoutId)) {
+      return res.status(400).json({
+        message: "Invalid workout ID",
+      });
+    }
+
+    const workout = await Workout.findOne({
+      _id: workoutId,
+      userId,
+    });
+
+    if (!workout) {
+      return res.status(404).json({
+        message: "Workout not found",
+      });
+    }
     const session = await WorkoutSession.findOneAndUpdate(
       { _id: id, userId },
       { workoutId, date, exercises },
