@@ -17,7 +17,7 @@ type CookieToSet = {
 export function toNextHandler(controller: any) {
   return async (
     req: NextRequest,
-    context?: { params?: Record<string, string> }
+    context?: { params?: Record<string, string> },
   ) => {
     try {
       await dbConnect();
@@ -25,7 +25,9 @@ export function toNextHandler(controller: any) {
       const body =
         req.method === "GET" ? {} : await req.json().catch(() => ({}));
       const cookiesArr = req.cookies.getAll();
-      const cookies = Object.fromEntries(cookiesArr.map((c) => [c.name, c.value]));
+      const cookies = Object.fromEntries(
+        cookiesArr.map((c) => [c.name, c.value]),
+      );
       const headers = Object.fromEntries(req.headers.entries());
       const params = context?.params ?? {};
 
@@ -68,10 +70,16 @@ export function toNextHandler(controller: any) {
       return response;
     } catch (err: any) {
       console.error("[API Error]", err);
-      return NextResponse.json(
-        { message: err?.message ?? "Internal server error" },
-        { status: 500 }
-      );
+      const message = err?.message ?? "Internal server error";
+
+      if (
+        message === "No token provided" ||
+        message === "Invalid or expired token"
+      ) {
+        return NextResponse.json({ message }, { status: 401 });
+      }
+
+      return NextResponse.json({ message }, { status: 500 });
     }
   };
 }
