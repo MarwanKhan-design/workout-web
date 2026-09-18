@@ -10,16 +10,43 @@ export interface IExercise extends Document {
 
 const ExerciseSchema: Schema<IExercise> = new Schema(
   {
-    name: { type: String, required: true, unique: true },
-    category: { type: String },
-    muscleGroup: { type: String },
-    equipment: { type: String },
-    description: { type: String },
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+      minlength: 1,
+      maxlength: 100,
+    },
+
+    category: {
+      type: String,
+      trim: true,
+      maxlength: 50,
+    },
+
+    muscleGroup: {
+      type: String,
+      trim: true,
+      maxlength: 50,
+    },
+
+    equipment: {
+      type: String,
+      trim: true,
+      maxlength: 100,
+    },
+
+    description: {
+      type: String,
+      trim: true,
+      maxlength: 1000,
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const Exercise: Model<IExercise> =
   mongoose.models.Exercise ||
   mongoose.model<IExercise>("Exercise", ExerciseSchema);
+
 export default Exercise;

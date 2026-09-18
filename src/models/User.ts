@@ -8,6 +8,7 @@ export interface IUser extends Document {
   email: string;
   passwordHash: string; // hashed password
   age?: number;
+  role: "user" | "admin";
 
   generateJWT(): string;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -19,10 +20,16 @@ const UserSchema: Schema<IUser> = new Schema(
     email: { type: String, unique: true, required: true },
     passwordHash: { type: String, required: true },
     age: { type: Number },
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+      required: true,
+    },
   },
   {
     timestamps: true, // createdAt, updatedAt
-  }
+  },
 );
 
 // Hash password before saving
@@ -39,7 +46,7 @@ UserSchema.pre<IUser>("save", async function (next) {
 
 // Compare password with hash
 UserSchema.methods.comparePassword = async function (
-  candidatePassword: string
+  candidatePassword: string,
 ): Promise<boolean> {
   return bcrypt.compare(candidatePassword, this.passwordHash);
 };

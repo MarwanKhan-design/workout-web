@@ -51,6 +51,7 @@ export const register = async (req: Request, res: Response) => {
       email,
       passwordHash: password,
       age,
+      role: "user",
     });
     await user.save();
     const token = user.generateJWT();
