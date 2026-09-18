@@ -1,46 +1,45 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { useState } from "react"
-import { apiFetch } from "@/lib/api"
-import { Icon } from "@/components/ui"
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { apiFetch } from "@/lib/api";
+import { Icon } from "@/components/ui";
 
 export default function Register() {
-  const router = useRouter()
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [age, setAge] = useState("")
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const router = useRouter();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [age, setAge] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+    e.preventDefault();
 
-    const trimmedName = name.trim()
-    const trimmedEmail = email.trim()
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
 
     if (!trimmedName || !trimmedEmail || !password) {
-      setError("Name, email, and password are required.")
-      return
+      setError("Name, email, and password are required.");
+      return;
     }
 
     const ageNum =
-      age.trim().length === 0 ? undefined : Number.parseInt(age.trim(), 10)
+      age.trim().length === 0 ? undefined : Number.parseInt(age.trim(), 10);
     if (ageNum !== undefined && (Number.isNaN(ageNum) || ageNum < 1)) {
-      setError("Age must be a positive number.")
-      return
+      setError("Age must be a positive number.");
+      return;
     }
 
     try {
-      setSubmitting(true)
-      setError(null)
+      setSubmitting(true);
+      setError(null);
 
       const data = await apiFetch<{
-        token?: string
-        user?: { id?: string; _id?: string; email?: string; name?: string }
-        message?: string
+        user?: { id?: string; _id?: string; email?: string; name?: string };
+        message?: string;
       }>("/auth/register", {
         method: "POST",
         body: JSON.stringify({
@@ -49,33 +48,31 @@ export default function Register() {
           password,
           age: ageNum,
         }),
-      })
+      });
 
-      if (!data?.token) {
-        setError(data?.message || "Registration failed. Please try again.")
-        return
-      }
+      window.dispatchEvent(new Event("auth-change"));
 
-      localStorage.setItem("token", data.token)
-      window.dispatchEvent(new Event("auth-change"))
-      const userId = data.user?.id || data.user?._id
-      if (userId) localStorage.setItem("userId", userId)
-
-      router.push("/workouts")
+      router.push("/workouts");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Registration failed")
+      setError(e instanceof Error ? e.message : "Registration failed");
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
   }
 
   return (
     <div className="relative flex min-h-screen items-center justify-center px-4 pt-28 pb-16 sm:px-6">
       {/* Ambient background glow */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+      >
         <div className="grid-bg absolute inset-0 opacity-40 [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000,transparent_75%)]" />
         <div className="animate-orb absolute top-1/4 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-volt-300/15 blur-[90px]" />
-        <div className="animate-orb absolute top-1/3 right-1/4 h-72 w-72 rounded-full bg-aqua-400/15 blur-[90px]" style={{ animationDelay: "-7s" }} />
+        <div
+          className="animate-orb absolute top-1/3 right-1/4 h-72 w-72 rounded-full bg-aqua-400/15 blur-[90px]"
+          style={{ animationDelay: "-7s" }}
+        />
       </div>
 
       <div className="glass-strong relative z-10 w-full max-w-md rounded-3xl border border-white/10 p-7 shadow-2xl backdrop-blur-2xl sm:p-9">
@@ -87,13 +84,17 @@ export default function Register() {
             Create your <span className="text-gradient">account</span>
           </h1>
           <p className="mt-2 text-sm text-white/60">
-            Sign up to build custom workouts, track every rep, and level up your consistency.
+            Sign up to build custom workouts, track every rep, and level up your
+            consistency.
           </p>
         </div>
 
         {error && (
           <div className="mb-5 flex items-start gap-2.5 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300 backdrop-blur-md">
-            <Icon name="close" className="mt-0.5 h-4 w-4 shrink-0 text-rose-400" />
+            <Icon
+              name="close"
+              className="mt-0.5 h-4 w-4 shrink-0 text-rose-400"
+            />
             <span>{error}</span>
           </div>
         )}
@@ -173,5 +174,5 @@ export default function Register() {
         </form>
       </div>
     </div>
-  )
+  );
 }

@@ -1,104 +1,100 @@
-"use client"
+"use client";
 
-import { useEffect, useMemo, useState } from "react"
-import { apiFetch } from "@/lib/api"
-import { Icon } from "@/components/ui"
-import Link from "next/link"
+import { useEffect, useMemo, useState } from "react";
+import { apiFetch } from "@/lib/api";
+import { Icon } from "@/components/ui";
+import Link from "next/link";
 
 type User = {
-  id?: string
-  _id?: string
-  name: string
-  email: string
-  age?: number
-}
+  id?: string;
+  _id?: string;
+  name: string;
+  email: string;
+  age?: number;
+};
 
 type WorkoutSession = {
-  _id: string
-  userId: string
-  workoutId: string
-  date: string
+  _id: string;
+  userId: string;
+  workoutId: string;
+  date: string;
   exercises: {
-    exercise: string
-    sets?: { reps: number; weight: number; duration: number }[]
-  }[]
-}
+    exercise: string;
+    sets?: { reps: number; weight: number; duration: number }[];
+  }[];
+};
 
 export default function ProfilePage() {
-  const [user, setUser] = useState<User | null>(null)
-  const [sessions, setSessions] = useState<WorkoutSession[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [user, setUser] = useState<User | null>(null);
+  const [sessions, setSessions] = useState<WorkoutSession[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadProfile() {
       try {
-        setError(null)
-        setLoading(true)
+        setError(null);
+        setLoading(true);
 
         const [userData, sessionData] = await Promise.all([
           apiFetch<{ user: User }>("/auth/me"),
           apiFetch<WorkoutSession[]>("/workout-session"),
-        ])
+        ]);
 
-        const currentUserId =
-          userData?.user?.id ||
-          userData?.user?._id ||
-          (typeof window !== "undefined" ? localStorage.getItem("userId") : null)
+        const allSessions = Array.isArray(sessionData) ? sessionData : [];
 
-        const allSessions = Array.isArray(sessionData) ? sessionData : []
-        const userSessions = currentUserId
-          ? allSessions.filter((s) => String(s.userId) === String(currentUserId))
-          : allSessions
-
-        setUser(userData.user)
-        setSessions(userSessions)
+        setUser(userData.user);
+        setSessions(allSessions);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Failed to load profile")
+        setError(e instanceof Error ? e.message : "Failed to load profile");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
-    loadProfile()
-  }, [])
+    loadProfile();
+  }, []);
 
   const stats = useMemo(() => {
-    if (!sessions.length) return null
+    if (!sessions.length) return null;
 
-    const totalSessions = sessions.length
+    const totalSessions = sessions.length;
 
     const lastSession = sessions
       .slice()
       .sort(
-        (a, b) =>
-          new Date(b.date).getTime() -
-          new Date(a.date).getTime()
-      )[0]
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+      )[0];
 
     const totalSets = sessions.reduce((sessionSum, session) => {
       const sessionSets =
         session.exercises?.reduce((exerciseSum, exercise) => {
-          return exerciseSum + (exercise.sets?.length ?? 0)
-        }, 0) ?? 0
+          return exerciseSum + (exercise.sets?.length ?? 0);
+        }, 0) ?? 0;
 
-      return sessionSum + sessionSets
-    }, 0)
+      return sessionSum + sessionSets;
+    }, 0);
 
     return {
       totalSessions,
       lastSession,
       totalSets,
-    }
-  }, [sessions])
+    };
+  }, [sessions]);
 
   return (
     <div className="relative min-h-screen px-4 pt-28 pb-20 sm:px-6">
       {/* Ambient background glow */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+      >
         <div className="grid-bg absolute inset-0 opacity-40 [mask-image:radial-gradient(ellipse_70%_50%_at_50%_0%,#000,transparent_80%)]" />
         <div className="animate-orb absolute top-24 right-20 h-96 w-96 rounded-full bg-volt-300/10 blur-[100px]" />
-        <div className="animate-orb absolute top-80 left-10 h-80 w-80 rounded-full bg-iris-500/10 blur-[90px]" style={{ animationDelay: "-9s" }} />
+        <div
+          className="animate-orb absolute top-80 left-10 h-80 w-80 rounded-full bg-iris-500/10 blur-[90px]"
+          style={{ animationDelay: "-9s" }}
+        />
       </div>
 
       <div className="mx-auto max-w-5xl">
@@ -121,7 +117,10 @@ export default function ProfilePage() {
           </div>
         ) : error ? (
           <div className="flex items-start gap-2.5 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-6 text-sm text-rose-300 backdrop-blur-md">
-            <Icon name="close" className="mt-0.5 h-4 w-4 shrink-0 text-rose-400" />
+            <Icon
+              name="close"
+              className="mt-0.5 h-4 w-4 shrink-0 text-rose-400"
+            />
             <span>{error}</span>
           </div>
         ) : (
@@ -135,7 +134,9 @@ export default function ProfilePage() {
                   <h2 className="font-display text-lg font-semibold text-white">
                     {user?.name || "Athlete"}
                   </h2>
-                  <p className="text-xs text-volt-300 font-medium">Active Member</p>
+                  <p className="text-xs text-volt-300 font-medium">
+                    Active Member
+                  </p>
                 </div>
               </div>
 
@@ -151,13 +152,17 @@ export default function ProfilePage() {
                     <dt className="text-xs font-semibold uppercase tracking-[0.14em] text-white/45">
                       Email Address
                     </dt>
-                    <dd className="mt-1 font-medium text-white">{user.email}</dd>
+                    <dd className="mt-1 font-medium text-white">
+                      {user.email}
+                    </dd>
                   </div>
                   <div>
                     <dt className="text-xs font-semibold uppercase tracking-[0.14em] text-white/45">
                       Age
                     </dt>
-                    <dd className="mt-1 font-medium text-white">{user.age ?? "Not specified"}</dd>
+                    <dd className="mt-1 font-medium text-white">
+                      {user.age ?? "Not specified"}
+                    </dd>
                   </div>
                 </dl>
               ) : (
@@ -239,5 +244,5 @@ export default function ProfilePage() {
         )}
       </div>
     </div>
-  )
+  );
 }

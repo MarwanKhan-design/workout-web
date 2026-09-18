@@ -132,11 +132,6 @@ export default function WorkoutSessionDetailPage() {
     setError(null)
     setSuccess(null)
 
-    const userId = localStorage.getItem("userId")
-    if (!userId) {
-      setError("You must be logged in to save a session.")
-      return
-    }
 
     const sessionExercises = workout.exercises.map((exId) => {
       const raw = inputs[exId]
@@ -173,7 +168,6 @@ export default function WorkoutSessionDetailPage() {
       await apiFetch("/workout-session", {
         method: "POST",
         body: JSON.stringify({
-          userId,
           workoutId,
           date: new Date().toISOString(),
           exercises: sessionExercises,

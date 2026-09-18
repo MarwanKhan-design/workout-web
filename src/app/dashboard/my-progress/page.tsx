@@ -1,142 +1,142 @@
-"use client"
+"use client";
 
-import ChartsCard from "@/components/charts/StatsCards"
-import { apiFetch } from "@/lib/api"
-import type { Workout } from "@/lib/types"
-import { useEffect, useMemo, useState } from "react"
-import { Icon } from "@/components/ui"
-import Link from "next/link"
+import ChartsCard from "@/components/charts/StatsCards";
+import { apiFetch } from "@/lib/api";
+import type { Workout } from "@/lib/types";
+import { useEffect, useMemo, useState } from "react";
+import { Icon } from "@/components/ui";
+import Link from "next/link";
 
 type WorkoutSession = {
-  _id: string
-  userId: string
-  workoutId: string
-  date: string
+  _id: string;
+  userId: string;
+  workoutId: string;
+  date: string;
   exercises: {
-    exercise: string
-    sets?: { reps: number; weight: number; duration: number }[]
-  }[]
-}
+    exercise: string;
+    sets?: { reps: number; weight: number; duration: number }[];
+  }[];
+};
 
 export default function MyProgressPage() {
-  const [sessions, setSessions] = useState<WorkoutSession[]>([])
-  const [workouts, setWorkouts] = useState<Workout[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [sessions, setSessions] = useState<WorkoutSession[]>([]);
+  const [workouts, setWorkouts] = useState<Workout[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   function formatDate(dateStr: string) {
-    const d = new Date(dateStr)
-    if (Number.isNaN(d.getTime())) return dateStr
+    const d = new Date(dateStr);
+    if (Number.isNaN(d.getTime())) return dateStr;
     return d.toLocaleDateString("en-GB", {
       day: "numeric",
       month: "short",
       year: "numeric",
-    })
+    });
   }
 
   const chartData = useMemo(() => {
     return sessions.map((session) => ({
       date: formatDate(session.date),
       value: session.exercises.length,
-    }))
-  }, [sessions])
+    }));
+  }, [sessions]);
 
   const heatmapData = useMemo(() => {
     return Object.values(
-      sessions.reduce((acc, session) => {
-        const date = session.date.split("T")[0]
-        if (!acc[date]) {
-          acc[date] = { date, count: 0 }
-        }
-        acc[date].count += 1
-        return acc
-      }, {} as Record<string, { date: string; count: number }>)
-    )
-  }, [sessions])
+      sessions.reduce(
+        (acc, session) => {
+          const date = session.date.split("T")[0];
+          if (!acc[date]) {
+            acc[date] = { date, count: 0 };
+          }
+          acc[date].count += 1;
+          return acc;
+        },
+        {} as Record<string, { date: string; count: number }>,
+      ),
+    );
+  }, [sessions]);
 
   useEffect(() => {
     async function load() {
       try {
-        setError(null)
-        setLoading(true)
+        setError(null);
+        setLoading(true);
 
         const [allSessions, allWorkouts] = await Promise.all([
           apiFetch<WorkoutSession[]>("/workout-session"),
           apiFetch<Workout[]>("/workout"),
-        ])
+        ]);
 
-        const userId = localStorage.getItem("userId")
-        const filtered = userId
-          ? allSessions.filter((s) => String(s.userId) === String(userId))
-          : allSessions
-
-        setSessions(filtered)
-        setWorkouts(allWorkouts)
+        setSessions(allSessions);
+        setWorkouts(allWorkouts);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Failed to load progress")
+        setError(e instanceof Error ? e.message : "Failed to load progress");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
-    load()
-  }, [])
+    load();
+  }, []);
 
   const workoutNameById = useMemo(() => {
-    const map: Record<string, string> = {}
+    const map: Record<string, string> = {};
     workouts.forEach((w) => {
       if (w._id) {
-        map[String(w._id)] = w.name
+        map[String(w._id)] = w.name;
       }
-    })
-    return map
-  }, [workouts])
+    });
+    return map;
+  }, [workouts]);
 
   const stats = useMemo(() => {
-    if (!sessions.length) return null
+    if (!sessions.length) return null;
 
-    const totalSessions = sessions.length
+    const totalSessions = sessions.length;
 
     const totalSets = sessions.reduce((sessionSum, session) => {
       const sessionSets =
         session.exercises?.reduce((exerciseSum, exercise) => {
-          return exerciseSum + (exercise.sets?.length ?? 0)
-        }, 0) ?? 0
+          return exerciseSum + (exercise.sets?.length ?? 0);
+        }, 0) ?? 0;
 
-      return sessionSum + sessionSets
-    }, 0)
+      return sessionSum + sessionSets;
+    }, 0);
 
     const first = sessions
       .slice()
       .sort(
-        (a, b) =>
-          new Date(a.date).getTime() -
-          new Date(b.date).getTime()
-      )[0]
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+      )[0];
 
     const last = sessions
       .slice()
       .sort(
-        (a, b) =>
-          new Date(b.date).getTime() -
-          new Date(a.date).getTime()
-      )[0]
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+      )[0];
 
     return {
       totalSessions,
       totalSets,
       first,
       last,
-    }
-  }, [sessions])
+    };
+  }, [sessions]);
 
   return (
     <div className="relative min-h-screen px-4 pt-28 pb-20 sm:px-6">
       {/* Ambient background glow */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+      >
         <div className="grid-bg absolute inset-0 opacity-40 [mask-image:radial-gradient(ellipse_70%_50%_at_50%_0%,#000,transparent_80%)]" />
         <div className="animate-orb absolute top-20 right-10 h-96 w-96 rounded-full bg-volt-300/10 blur-[100px]" />
-        <div className="animate-orb absolute top-96 left-10 h-80 w-80 rounded-full bg-aqua-400/10 blur-[90px]" style={{ animationDelay: "-8s" }} />
+        <div
+          className="animate-orb absolute top-96 left-10 h-80 w-80 rounded-full bg-aqua-400/10 blur-[90px]"
+          style={{ animationDelay: "-8s" }}
+        />
       </div>
 
       <div className="mx-auto max-w-6xl space-y-8">
@@ -149,7 +149,8 @@ export default function MyProgressPage() {
               Training <span className="text-gradient">Progress</span>
             </h1>
             <p className="mt-2 text-sm text-white/60">
-              Review your training consistency, frequency trends, and recorded workout history.
+              Review your training consistency, frequency trends, and recorded
+              workout history.
             </p>
           </div>
 
@@ -165,12 +166,18 @@ export default function MyProgressPage() {
         {loading ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
             {[1, 2, 3, 4].map((n) => (
-              <div key={n} className="glass-strong h-28 animate-pulse rounded-2xl border border-white/8 p-5" />
+              <div
+                key={n}
+                className="glass-strong h-28 animate-pulse rounded-2xl border border-white/8 p-5"
+              />
             ))}
           </div>
         ) : error ? (
           <div className="flex items-start gap-2.5 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-5 text-sm text-rose-300 backdrop-blur-md">
-            <Icon name="close" className="mt-0.5 h-4 w-4 shrink-0 text-rose-400" />
+            <Icon
+              name="close"
+              className="mt-0.5 h-4 w-4 shrink-0 text-rose-400"
+            />
             <span>{error}</span>
           </div>
         ) : (
@@ -182,7 +189,8 @@ export default function MyProgressPage() {
               </h2>
               {!stats ? (
                 <div className="glass-strong rounded-3xl border border-white/10 p-8 text-center text-sm text-white/50">
-                  No workout sessions logged yet. Start a session from the workouts section to track your gains.
+                  No workout sessions logged yet. Start a session from the
+                  workouts section to track your gains.
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -255,11 +263,12 @@ export default function MyProgressPage() {
                     .slice()
                     .sort(
                       (a, b) =>
-                        new Date(b.date).getTime() - new Date(a.date).getTime()
+                        new Date(b.date).getTime() - new Date(a.date).getTime(),
                     )
                     .map((s) => {
-                      const name = workoutNameById[s.workoutId] || "Custom Workout"
-                      const sets = s.exercises?.length ?? 0
+                      const name =
+                        workoutNameById[s.workoutId] || "Custom Workout";
+                      const sets = s.exercises?.length ?? 0;
                       return (
                         <div
                           key={s._id}
@@ -270,14 +279,15 @@ export default function MyProgressPage() {
                               {name}
                             </p>
                             <p className="mt-1 text-xs text-white/50">
-                              {formatDate(s.date)} • {sets} {sets === 1 ? "exercise" : "exercises"} completed
+                              {formatDate(s.date)} • {sets}{" "}
+                              {sets === 1 ? "exercise" : "exercises"} completed
                             </p>
                           </div>
                           <span className="rounded-full border border-volt-300/20 bg-volt-300/10 px-3 py-1 text-xs font-semibold text-volt-300">
                             Completed
                           </span>
                         </div>
-                      )
+                      );
                     })}
                 </div>
               )}
@@ -286,5 +296,5 @@ export default function MyProgressPage() {
         )}
       </div>
     </div>
-  )
+  );
 }

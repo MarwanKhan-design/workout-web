@@ -63,21 +63,22 @@ export default function Navbar() {
   const navLinks = isHome ? marketingLinks : appLinks;
 
   useEffect(() => {
-    const syncAuth = () => {
-      setIsLoggedIn(Boolean(localStorage.getItem("token")));
+    const syncAuth = async () => {
+      try {
+        await apiFetch("/auth/me");
+        setIsLoggedIn(true);
+      } catch {
+        setIsLoggedIn(false);
+      }
     };
+
     syncAuth();
 
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === "token") syncAuth();
-    };
     const onAuthChange = () => syncAuth();
 
-    window.addEventListener("storage", onStorage);
     window.addEventListener("auth-change", onAuthChange);
 
     return () => {
-      window.removeEventListener("storage", onStorage);
       window.removeEventListener("auth-change", onAuthChange);
     };
   }, []);
@@ -102,7 +103,6 @@ export default function Navbar() {
     } catch {
       // best-effort
     } finally {
-      localStorage.removeItem("token");
       localStorage.removeItem("userId");
       setIsLoggedIn(false);
       setUserDropdown(false);
@@ -140,14 +140,18 @@ export default function Navbar() {
                   href={link.href}
                   className={cn(
                     "group relative rounded-full px-4 py-2 text-[0.88rem] font-medium transition-colors duration-300",
-                    active ? "text-volt-300 font-semibold" : "text-white/65 hover:text-white"
+                    active
+                      ? "text-volt-300 font-semibold"
+                      : "text-white/65 hover:text-white",
                   )}
                 >
                   {link.label}
                   <span
                     className={cn(
                       "absolute inset-x-4 -bottom-0.5 h-px bg-gradient-to-r from-transparent via-volt-300 to-transparent transition-transform duration-300",
-                      active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                      active
+                        ? "scale-x-100"
+                        : "scale-x-0 group-hover:scale-x-100",
                     )}
                   />
                 </Link>
@@ -171,7 +175,7 @@ export default function Navbar() {
                     name="chevron"
                     className={cn(
                       "h-3.5 w-3.5 text-white/50 transition-transform duration-200",
-                      userDropdown && "rotate-180"
+                      userDropdown && "rotate-180",
                     )}
                   />
                 </button>

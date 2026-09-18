@@ -21,7 +21,7 @@ export const getCurrentUser = async (req: Request, res: Response) => {
     const secret = process.env.JWT_SECRET;
     if (!secret) throw new Error("JWT_SECRET not set");
     const decoded = jwt.verify(token, secret) as { sub: string };
-    const user = await User.findById(decoded.sub).select("-password");
+    const user = await User.findById(decoded.sub).select("-passwordHash");
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -62,7 +62,7 @@ export const register = async (req: Request, res: Response) => {
         maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
       })
       .status(201)
-      .json({ token, user: { id: user._id, name, email, age } });
+      .json({ user: { id: user._id, name, email, age } });
   } catch (err) {
     res
       .status(500)
@@ -94,7 +94,6 @@ export const login = async (req: Request, res: Response) => {
         maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
       })
       .json({
-        token,
         user: {
           id: user._id,
           name: user.name,

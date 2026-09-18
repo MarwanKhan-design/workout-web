@@ -2,17 +2,15 @@ const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/api`;
 
 export async function apiFetch<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<T> {
-  const token = localStorage.getItem("token");
-
   const res = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
-      Authorization: token ? `Bearer ${token}` : "",
       ...(options.headers || {}),
     },
+    credentials: "include",
   });
 
   const data = await res.json();
