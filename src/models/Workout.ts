@@ -9,14 +9,43 @@ export interface IWorkout extends Document {
 
 const WorkoutSchema: Schema<IWorkout> = new Schema(
   {
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    name: { type: String, required: true },
-    description: { type: String },
-    exercises: [
-      { type: Schema.Types.ObjectId, ref: "Exercise", required: true },
-    ],
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+      minlength: 1,
+      maxlength: 100,
+    },
+
+    description: {
+      type: String,
+      trim: true,
+      maxlength: 1000,
+    },
+
+    exercises: {
+      type: [
+        {
+          type: Schema.Types.ObjectId,
+          ref: "Exercise",
+          required: true,
+        },
+      ],
+      required: true,
+      validate: {
+        validator: (value: Types.ObjectId[]) => value.length > 0,
+        message: "A workout must contain at least one exercise",
+      },
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const Workout: Model<IWorkout> =

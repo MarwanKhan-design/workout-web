@@ -7,46 +7,60 @@ import mongoose from "mongoose";
 export const createWorkoutSession = async (req: Request, res: Response) => {
   const userId = authenticateRequest(req);
 
-  const { workoutId, date, exercises } = req.body;
+  try {
+    const { workoutId, date, exercises } = req.body;
 
-  if (
-    !workoutId ||
-    !date ||
-    !Array.isArray(exercises) ||
-    exercises.length === 0
-  ) {
-    return res.status(400).json({
-      message: "Workout, date, and exercises are required",
+    if (
+      !workoutId ||
+      !date ||
+      !Array.isArray(exercises) ||
+      exercises.length === 0
+    ) {
+      return res.status(400).json({
+        message: "Workout, date, and exercises are required",
+      });
+    }
+
+    if (!mongoose.isValidObjectId(workoutId)) {
+      return res.status(400).json({
+        message: "Invalid workout ID",
+      });
+    }
+
+    const workout = await Workout.findOne({
+      _id: workoutId,
+      userId,
+    });
+
+    if (!workout) {
+      return res.status(404).json({
+        message: "Workout not found",
+      });
+    }
+
+    const session = new WorkoutSession({
+      userId,
+      workoutId,
+      date,
+      exercises,
+    });
+
+    await session.save();
+
+    return res.status(201).json(session);
+  } catch (err: any) {
+    if (err.name === "ValidationError" || err.name === "CastError") {
+      return res.status(400).json({
+        message: "Invalid workout session data",
+      });
+    }
+
+    console.error("Create workout session error:", err);
+
+    return res.status(500).json({
+      message: "Failed to create workout session",
     });
   }
-
-  if (!mongoose.isValidObjectId(workoutId)) {
-    return res.status(400).json({
-      message: "Invalid workout ID",
-    });
-  }
-
-  const workout = await Workout.findOne({
-    _id: workoutId,
-    userId,
-  });
-
-  if (!workout) {
-    return res.status(404).json({
-      message: "Workout not found",
-    });
-  }
-
-  const session = new WorkoutSession({
-    userId,
-    workoutId,
-    date,
-    exercises,
-  });
-
-  await session.save();
-
-  res.status(201).json(session);
 };
 
 // Get all workout sessions
@@ -57,13 +71,13 @@ export const getWorkoutSessions = async (req: Request, res: Response) => {
     const sessions = await WorkoutSession.find({ userId });
     res.json(sessions);
   } catch (err) {
-    res.status(500).json({
-      message: "Failed to fetch workout sessions",
-      error: (err as Error).message,
-    });
+    console.error("Get workout sessions error:", err);
+
+    return res
+      .status(500)
+      .json({ message: "Failed to fetch workout sessions" });
   }
 };
-
 // Get workout session by ID
 export const getWorkoutSessionById = async (req: Request, res: Response) => {
   const userId = authenticateRequest(req);
@@ -84,10 +98,9 @@ export const getWorkoutSessionById = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Workout session not found" });
     res.json(session);
   } catch (err) {
-    res.status(500).json({
-      message: "Failed to fetch workout session",
-      error: (err as Error).message,
-    });
+    console.error("Get workout sessions error:", err);
+
+    return res.status(500).json({ message: "Failed to fetch workout session" });
   }
 };
 
@@ -97,13 +110,24 @@ export const updateWorkoutSession = async (req: Request, res: Response) => {
 
   try {
     const { id } = req.params;
+    const { workoutId, date, exercises } = req.body;
 
     if (!mongoose.isValidObjectId(id)) {
       return res.status(400).json({
         message: "Invalid workout session ID",
       });
     }
-    const { workoutId, date, exercises } = req.body;
+
+    if (
+      !workoutId ||
+      !date ||
+      !Array.isArray(exercises) ||
+      exercises.length === 0
+    ) {
+      return res.status(400).json({
+        message: "Workout, date, and exercises are required",
+      });
+    }
 
     if (!mongoose.isValidObjectId(workoutId)) {
       return res.status(400).json({
@@ -129,10 +153,17 @@ export const updateWorkoutSession = async (req: Request, res: Response) => {
     if (!session)
       return res.status(404).json({ message: "Workout session not found" });
     res.json(session);
-  } catch (err) {
-    res.status(500).json({
+  } catch (err: any) {
+    if (err.name === "ValidationError" || err.name === "CastError") {
+      return res.status(400).json({
+        message: "Invalid workout session data",
+      });
+    }
+
+    console.error("Update workout session error:", err);
+
+    return res.status(500).json({
       message: "Failed to update workout session",
-      error: (err as Error).message,
     });
   }
 };
@@ -156,9 +187,10 @@ export const deleteWorkoutSession = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Workout session not found" });
     res.json({ message: "Workout session deleted" });
   } catch (err) {
-    res.status(500).json({
-      message: "Failed to delete workout session",
-      error: (err as Error).message,
-    });
+    console.error("Get workout sessions error:", err);
+
+    return res
+      .status(500)
+      .json({ message: "Failed to delete workout sessions" });
   }
 };

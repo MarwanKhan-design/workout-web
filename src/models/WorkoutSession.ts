@@ -12,18 +12,34 @@ export interface IWorkoutSession extends Document {
   exercises: IWorkoutSessionExercise[];
 }
 
-const RepsSchema = new Schema({
-  reps: { type: Number },
-  weight: { type: Number },
-  duration: { type: Number },
-});
+const RepsSchema = new Schema(
+  {
+    reps: {
+      type: Number,
+      min: 0,
+      max: 1000,
+    },
 
+    weight: {
+      type: Number,
+      min: 0,
+      max: 1000,
+    },
+
+    duration: {
+      type: Number,
+      min: 0,
+      max: 86400,
+    },
+  },
+  { _id: false },
+);
 const WorkoutSessionExerciseSchema = new Schema<IWorkoutSessionExercise>(
   {
     exercise: { type: Schema.Types.ObjectId, ref: "Exercise", required: true },
     sets: { type: [RepsSchema] },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const WorkoutSessionSchema: Schema<IWorkoutSession> = new Schema(
@@ -33,7 +49,7 @@ const WorkoutSessionSchema: Schema<IWorkoutSession> = new Schema(
     date: { type: Date, required: true },
     exercises: { type: [WorkoutSessionExerciseSchema], required: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const WorkoutSession: Model<IWorkoutSession> =
