@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import Workout from "../models/Workout";
 import { authenticateRequest } from "@/lib/auth";
 import mongoose from "mongoose";
+import Exercise from "@/models/Exercise";
 
 // Create a new workout (userId must match JWT user)
 export const createWorkout = async (req: Request, res: Response) => {
@@ -13,6 +14,25 @@ export const createWorkout = async (req: Request, res: Response) => {
       return res
         .status(400)
         .json({ message: "userId, name, and exercises are required" });
+    }
+    const invalidExerciseId = exercises.some(
+      (exerciseId: string) => !mongoose.isValidObjectId(exerciseId),
+    );
+
+    if (invalidExerciseId) {
+      return res.status(400).json({
+        message: "One or more exercise IDs are invalid",
+      });
+    }
+
+    const existingExercises = await Exercise.find({
+      _id: { $in: exercises },
+    }).select("_id");
+
+    if (existingExercises.length !== exercises.length) {
+      return res.status(400).json({
+        message: "One or more exercises do not exist",
+      });
     }
 
     const workout = new Workout({ userId, name, description, exercises });
@@ -65,7 +85,34 @@ export const updateWorkout = async (req: Request, res: Response) => {
         message: "Invalid workout ID",
       });
     }
+
     const { name, description, exercises } = req.body;
+
+    if (!name || !Array.isArray(exercises) || exercises.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "name, and exercises are required" });
+    }
+
+    const invalidExerciseId = exercises.some(
+      (exerciseId: string) => !mongoose.isValidObjectId(exerciseId),
+    );
+
+    if (invalidExerciseId) {
+      return res.status(400).json({
+        message: "One or more exercise IDs are invalid",
+      });
+    }
+
+    const existingExercises = await Exercise.find({
+      _id: { $in: exercises },
+    }).select("_id");
+
+    if (existingExercises.length !== exercises.length) {
+      return res.status(400).json({
+        message: "One or more exercises do not exist",
+      });
+    }
     const workout = await Workout.findOneAndUpdate(
       { _id: id, userId },
       { userId, name, description, exercises },
