@@ -154,6 +154,7 @@ export const updateWorkoutSession = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Workout session not found" });
     res.json(session);
   } catch (err: any) {
+
     if (err.name === "ValidationError" || err.name === "CastError") {
       return res.status(400).json({
         message: "Invalid workout session data",
