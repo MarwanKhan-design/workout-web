@@ -10,6 +10,17 @@ import Showcase from "@/components/Showcase";
 import SocialProof from "@/components/SocialProof";
 import Testimonials from "@/components/Testimonials";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "BarhtaFit — Plan, log, and track your training.",
+  description:
+    "BarhtaFit helps you create workouts, log sessions, and track your progress over time.",
+  alternates: {
+    canonical: "/",
+  },
+};
+
 export default function App() {
   return (
     <div className="relative min-h-screen bg-ink-950 text-white antialiased">
