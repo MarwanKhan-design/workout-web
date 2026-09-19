@@ -6,14 +6,6 @@ import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api";
 import { Icon } from "@/components/ui";
 
-import type { Metadata } from 'next'
-
-export const metadata: Metadata = {
-  robots: {
-    index: false,
-    follow: false,
-  },
-}
 
 export default function Login() {
   const router = useRouter();

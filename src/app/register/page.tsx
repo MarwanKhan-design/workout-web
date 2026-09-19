@@ -6,15 +6,6 @@ import { useState } from "react";
 import { apiFetch } from "@/lib/api";
 import { Icon } from "@/components/ui";
 
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  robots: {
-    index: false,
-    follow: false,
-  },
-};
-
 export default function Register() {
   const router = useRouter();
   const [name, setName] = useState("");
