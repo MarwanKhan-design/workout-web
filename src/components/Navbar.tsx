@@ -17,7 +17,7 @@ const marketingLinks = [
 
 const appLinks = [
   { label: "Workouts", href: "/workouts" },
-  { label: "Exercises", href: "/exercises" },
+  { label: "Exercises", href: "/exercises", adminOnly: true },
   { label: "Session", href: "/workout-session" },
   { label: "My Progress", href: "/dashboard/my-progress" },
 ];
@@ -26,7 +26,7 @@ export function Logo({ className }: { className?: string }) {
   return (
     <Link
       href="/"
-      aria-label="Workout Web home"
+      aria-label="BarhtaFit home"
       className={cn("group inline-flex items-center gap-2.5", className)}
     >
       <span className="relative grid h-9 w-9 place-items-center overflow-hidden rounded-[0.7rem] bg-gradient-to-br from-volt-300 via-volt-400 to-aqua-400 shadow-[0_8px_24px_-10px_rgba(214,255,102,0.9)] transition-transform duration-500 group-hover:rotate-[8deg]">
@@ -45,7 +45,7 @@ export function Logo({ className }: { className?: string }) {
         </svg>
       </span>
       <span className="font-display text-[1.05rem] font-semibold tracking-tight text-white">
-        Workout<span className="text-volt-300">Web</span>
+        Barhta<span className="text-volt-300">Fit</span>
       </span>
     </Link>
   );
@@ -57,18 +57,23 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [userDropdown, setUserDropdown] = useState(false);
 
   const isHome = pathname === "/";
-  const navLinks = isHome ? marketingLinks : appLinks;
+  const navLinks = isHome
+    ? marketingLinks
+    : appLinks.filter((link) => !link.adminOnly || isAdmin);
 
   useEffect(() => {
     const syncAuth = async () => {
       try {
-        await apiFetch("/auth/me");
+        const data = await apiFetch<{ user?: { role?: string } }>("/auth/me");
         setIsLoggedIn(true);
+        setIsAdmin(data.user?.role === "admin");
       } catch {
         setIsLoggedIn(false);
+        setIsAdmin(false);
       }
     };
 
@@ -105,6 +110,7 @@ export default function Navbar() {
     } finally {
       localStorage.removeItem("userId");
       setIsLoggedIn(false);
+      setIsAdmin(false);
       setUserDropdown(false);
       setOpen(false);
       window.dispatchEvent(new Event("auth-change"));
@@ -218,13 +224,16 @@ export default function Navbar() {
                 >
                   Sign in
                 </Link>
-                <Button href="/register">
+                <Link
+                  href="/register"
+                  className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full bg-volt-300 px-5 py-2.5 text-sm font-medium tracking-tight text-ink-950 shadow-[0_12px_34px_-12px_rgba(214,255,102,0.65)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-volt-200 hover:shadow-[0_18px_44px_-12px_rgba(214,255,102,0.75)] active:translate-y-0"
+                >
                   Start free
                   <Icon
                     name="arrow"
                     className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5"
                   />
-                </Button>
+                </Link>
               </>
             )}
           </div>
@@ -309,14 +318,13 @@ export default function Navbar() {
               </>
             ) : (
               <>
-                <Button
+                <Link
                   href="/register"
-                  size="lg"
                   onClick={() => setOpen(false)}
-                  className="w-full"
+                  className="group relative inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-volt-300 px-7 py-3.5 text-[0.95rem] font-medium tracking-tight text-ink-950 shadow-[0_12px_34px_-12px_rgba(214,255,102,0.65)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-volt-200"
                 >
-                  Start free — no card
-                </Button>
+                  Start free
+                </Link>
                 <Button
                   variant="outline"
                   size="lg"

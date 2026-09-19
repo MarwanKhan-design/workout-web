@@ -1,41 +1,47 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { useEffect, useState } from "react"
-import WorkoutCard from "@/components/WorkoutCard"
-import { apiFetch } from "@/lib/api"
-import type { Workout } from "@/lib/types"
-import { Icon } from "@/components/ui"
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import WorkoutCard from "@/components/WorkoutCard";
+import { apiFetch } from "@/lib/api";
+import type { Workout } from "@/lib/types";
+import { Icon } from "@/components/ui";
 
 export default function WorkoutsPage() {
-  const [workouts, setWorkouts] = useState<Workout[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [workouts, setWorkouts] = useState<Workout[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadWorkouts() {
       try {
-        setError(null)
-        setLoading(true)
-        const data = await apiFetch<Workout[]>("/workout")
-        setWorkouts(Array.isArray(data) ? data : [])
+        setError(null);
+        setLoading(true);
+        const data = await apiFetch<Workout[]>("/workout");
+        setWorkouts(Array.isArray(data) ? data : []);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Failed to load workouts")
+        setError(e instanceof Error ? e.message : "Failed to load workouts");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
-    loadWorkouts()
-  }, [])
+    loadWorkouts();
+  }, []);
 
   return (
     <div className="relative min-h-screen px-4 pt-28 pb-20 sm:px-6">
       {/* Ambient background glow */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+      >
         <div className="grid-bg absolute inset-0 opacity-40 [mask-image:radial-gradient(ellipse_70%_50%_at_50%_0%,#000,transparent_80%)]" />
         <div className="animate-orb absolute top-20 right-10 h-96 w-96 rounded-full bg-volt-300/10 blur-[100px]" />
-        <div className="animate-orb absolute top-80 left-10 h-80 w-80 rounded-full bg-iris-500/10 blur-[90px]" style={{ animationDelay: "-8s" }} />
+        <div
+          className="animate-orb absolute top-80 left-10 h-80 w-80 rounded-full bg-iris-500/10 blur-[90px]"
+          style={{ animationDelay: "-8s" }}
+        />
       </div>
 
       <div className="mx-auto max-w-6xl">
@@ -63,7 +69,10 @@ export default function WorkoutsPage() {
 
         {error && (
           <div className="mb-6 flex items-start gap-2.5 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300 backdrop-blur-md">
-            <Icon name="close" className="mt-0.5 h-4 w-4 shrink-0 text-rose-400" />
+            <Icon
+              name="close"
+              className="mt-0.5 h-4 w-4 shrink-0 text-rose-400"
+            />
             <span>{error}</span>
           </div>
         )}
@@ -74,7 +83,9 @@ export default function WorkoutsPage() {
               All routines
             </h2>
             <div className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white/60">
-              <span className="font-semibold text-volt-300">{workouts.length}</span>{" "}
+              <span className="font-semibold text-volt-300">
+                {workouts.length}
+              </span>{" "}
               {workouts.length === 1 ? "workout" : "workouts"} total
             </div>
           </div>
@@ -97,7 +108,8 @@ export default function WorkoutsPage() {
                 No workouts created yet
               </h3>
               <p className="mt-1.5 max-w-sm text-xs text-white/50">
-                You haven&apos;t set up any workout routines. Start building your first split now.
+                You haven&apos;t set up any workout routines. Start building
+                your first split now.
               </p>
               <Link
                 href="/workouts/create"
@@ -109,12 +121,15 @@ export default function WorkoutsPage() {
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
               {workouts.map((w) => (
-                <WorkoutCard key={w._id ?? `${w.userId}-${w.name}`} workout={w} />
+                <WorkoutCard
+                  key={w._id ?? `${w.userId}-${w.name}`}
+                  workout={w}
+                />
               ))}
             </div>
           )}
         </section>
       </div>
     </div>
-  )
+  );
 }

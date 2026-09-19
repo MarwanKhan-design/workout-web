@@ -44,7 +44,12 @@ const WorkoutSessionExerciseSchema = new Schema<IWorkoutSessionExercise>(
 
 const WorkoutSessionSchema: Schema<IWorkoutSession> = new Schema(
   {
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
     workoutId: { type: Schema.Types.ObjectId, ref: "Workout", required: true },
     date: { type: Date, required: true },
     exercises: { type: [WorkoutSessionExerciseSchema], required: true },

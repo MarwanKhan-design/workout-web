@@ -1,13 +1,16 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { apiFetch } from "@/lib/api"
 import { Exercise } from "@/lib/types"
 import ExerciseCard from "@/components/ExerciseCard"
 import { Icon } from "@/components/ui"
 
 export default function ExercisesPage() {
+  const router = useRouter()
   const [exercises, setExercises] = useState<Exercise[]>([])
+  const [authorized, setAuthorized] = useState(false)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -24,6 +27,13 @@ export default function ExercisesPage() {
       try {
         setError(null)
         setLoading(true)
+        const me = await apiFetch<{ user?: { role?: string } }>("/auth/me")
+        if (me.user?.role !== "admin") {
+          router.replace("/workouts")
+          return
+        }
+
+        setAuthorized(true)
         const data = await apiFetch<Exercise[]>("/exercise")
         setExercises(Array.isArray(data) ? data : [])
       } catch (e) {
@@ -34,7 +44,7 @@ export default function ExercisesPage() {
     }
 
     loadExercises()
-  }, [])
+  }, [router])
 
   async function onCreateExercise(e: React.FormEvent) {
     e.preventDefault()
@@ -68,6 +78,10 @@ export default function ExercisesPage() {
     }
   }
 
+  if (!authorized) {
+    return null
+  }
+
   return (
     <div className="relative min-h-screen px-4 pt-28 pb-20 sm:px-6">
       {/* Ambient background glow */}
@@ -87,7 +101,7 @@ export default function ExercisesPage() {
               Exercise <span className="text-gradient">Directory</span>
             </h1>
             <p className="mt-2 text-sm text-white/60">
-              Browse movement patterns or register new custom exercises for your routines.
+              Manage the exercise library used when members create workouts.
             </p>
           </div>
           <div className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-xs text-white/70">

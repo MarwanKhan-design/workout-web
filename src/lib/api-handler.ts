@@ -70,7 +70,7 @@ export function toNextHandler(controller: any) {
       return response;
     } catch (err: any) {
       console.error("[API Error]", err);
-      const message = err?.message ?? "Internal server error";
+      const message = err?.message
 
       if (
         message === "No token provided" ||

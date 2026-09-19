@@ -40,15 +40,30 @@ export const register = async (req: Request, res: Response) => {
     if (!name || !email || !password) {
       return res.status(400).json({ message: "Missing required fields" });
     }
+    const normalizedEmail = email.trim().toLowerCase();
+    // check email regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(normalizedEmail)) {
+      return res.status(400).json({
+        message: "Invalid email address",
+      });
+    }
+    // check the password strength
+    if (password.length < 8) {
+      return res.status(400).json({
+        message: "Password must be at least 8 characters long",
+      });
+    }
     // Check if user exists
-    const existing = await User.findOne({ email });
+    const existing = await User.findOne({ email: normalizedEmail });
     if (existing) {
       return res.status(409).json({ message: "Email already in use" });
     }
     // Create user (password will be hashed by pre-save hook)
     const user = new User({
       name,
-      email,
+      email: normalizedEmail,
       passwordHash: password,
       age,
       role: "user",
@@ -63,7 +78,7 @@ export const register = async (req: Request, res: Response) => {
         maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
       })
       .status(201)
-      .json({ user: { id: user._id, name, email, age } });
+      .json({ user: { id: user._id, name, email: normalizedEmail, age } });
   } catch (err) {
     res
       .status(500)

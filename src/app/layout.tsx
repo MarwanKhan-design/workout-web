@@ -14,8 +14,8 @@ const interTight = Inter_Tight({
 })
 
 export const metadata = {
-  title: 'Workout Web — Train with intent. Progress you can see.',
-  description: 'The training app for people who want the habit to stick. Beautiful sessions, honest data, and a plan that adapts to your life.',
+  title: 'BarhtaFit — Plan, log, and track your training.',
+  description: 'BarhtaFit helps you create workouts, log sessions, and track your progress over time.',
 }
 
 export default function RootLayout({
@@ -26,7 +26,6 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark scroll-smooth">
       <body className={`${inter.variable} ${interTight.variable} font-sans bg-ink-950 text-white min-h-screen antialiased selection:bg-volt-300 selection:text-ink-950`}>
-        <AuthCheck />
         <Navbar />
         {children}
       </body>
