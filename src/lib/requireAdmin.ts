@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import User from "../models/User";
 import { authenticateRequest } from "@/lib/auth";
 import { toNextHandler } from "@/lib/api-handler";
+import dbConnect from "./mongodb";
 
 export const requireAdmin = (
   controller: (req: any, res: any) => Promise<any>,
@@ -18,7 +19,7 @@ export const requireAdmin = (
       };
 
       const userId = authenticateRequest(authRequest);
-
+      await dbConnect();
       const user = await User.findById(userId).select("role");
 
       if (!user) {
