@@ -34,6 +34,9 @@ export const metadata: Metadata = {
     siteName: "BarhtaFit",
     type: "website",
   },
+  other: {
+    'p:domain_verify': '957514ba0a433cefcb2452baf144bfeb',
+  },
 };
 
 export default function RootLayout({
