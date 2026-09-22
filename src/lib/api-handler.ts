@@ -30,6 +30,7 @@ export function toNextHandler(controller: any) {
       );
       const headers = Object.fromEntries(req.headers.entries());
       const params = context?.params ?? {};
+      const query = Object.fromEntries(req.nextUrl.searchParams.entries());
 
       let status = 200;
       let jsonData: any = {};
@@ -55,7 +56,7 @@ export function toNextHandler(controller: any) {
         },
       };
 
-      await controller({ body, cookies, headers, params }, res);
+      await controller({ body, cookies, headers, params, query }, res);
 
       const response = NextResponse.json(jsonData, { status });
 

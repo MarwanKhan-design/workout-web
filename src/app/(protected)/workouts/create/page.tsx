@@ -1,67 +1,115 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
-import { apiFetch } from "@/lib/api"
-import type { Exercise } from "@/lib/types"
-import { Icon } from "@/components/ui"
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { apiFetch } from "@/lib/api";
+import type { Exercise } from "@/lib/types";
+import { Icon } from "@/components/ui";
 
 export default function CreateWorkout() {
-  const router = useRouter()
-  const [name, setName] = useState("")
-  const [description, setDescription] = useState("")
-  const [exercises, setExercises] = useState<Exercise[]>([])
-  const [selected, setSelected] = useState<string[]>([])
-  const [userId, setUserId] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const router = useRouter();
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [muscleGroup, setMuscleGroup] = useState("");
+  const [equipment, setEquipment] = useState("");
+  const [category, setCategory] = useState("");
+  const [userId, setUserId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function load() {
-      try {
-        setError(null)
-        setLoading(true)
-        const localUserId = localStorage.getItem('userId')
-        const me = await apiFetch<{ user?: { _id?: string } }>("/auth/me")
-        const id = me?.user?._id
-        setUserId(localUserId ?? id ?? null)
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 600);
 
-        const ex = await apiFetch<Exercise[]>("/exercise")
-        setExercises(Array.isArray(ex) ? ex : [])
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    async function loadUser() {
+      try {
+        const localUserId = localStorage.getItem("userId");
+
+        const me = await apiFetch<{ user?: { _id?: string } }>("/auth/me");
+        const id = me?.user?._id;
+
+        setUserId(localUserId ?? id ?? null);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Failed to load data")
-      } finally {
-        setLoading(false)
+        setError(e instanceof Error ? e.message : "Failed to load user");
       }
     }
 
-    load()
-  }, [])
+    loadUser();
+  }, []);
 
+  useEffect(() => {
+    async function loadExercises() {
+      try {
+        setError(null);
+        setLoading(true);
+
+        const params = new URLSearchParams();
+
+        if (debouncedSearch.trim()) {
+          params.set("search", debouncedSearch.trim());
+        }
+
+        if (muscleGroup) {
+          params.set("muscleGroup", muscleGroup);
+        }
+
+        if (equipment) {
+          params.set("equipment", equipment);
+        }
+
+        if (category) {
+          params.set("category", category);
+        }
+
+        const query = params.toString();
+
+        const ex = await apiFetch<Exercise[]>(
+          query ? `/exercise?${query}` : "/exercise",
+        );
+
+        setExercises(Array.isArray(ex) ? ex : []);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Failed to load exercises");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadExercises();
+  }, [debouncedSearch, muscleGroup, equipment, category]);
   async function createWorkout(e: React.FormEvent) {
-    e.preventDefault()
-    setError(null)
+    e.preventDefault();
+    setError(null);
 
-    const trimmedName = name.trim()
-    const trimmedDescription = description.trim()
+    const trimmedName = name.trim();
+    const trimmedDescription = description.trim();
 
     if (!trimmedName) {
-      setError("Workout name is required.")
-      return
+      setError("Workout name is required.");
+      return;
     }
     if (selected.length === 0) {
-      setError("Select at least one exercise.")
-      return
+      setError("Select at least one exercise.");
+      return;
     }
     if (!userId) {
-      setError("You must be logged in to create a workout.")
-      return
+      setError("You must be logged in to create a workout.");
+      return;
     }
 
     try {
-      setSubmitting(true)
+      setSubmitting(true);
       const created = await apiFetch("/workout", {
         method: "POST",
         body: JSON.stringify({
@@ -70,34 +118,42 @@ export default function CreateWorkout() {
           description: trimmedDescription,
           exercises: selected,
         }),
-      })
+      });
 
-      const msg = (created as any)?.message
+      const msg = (created as any)?.message;
       if (msg && typeof msg === "string" && (created as any)?._id == null) {
-        setError(msg)
-        return
+        setError(msg);
+        return;
       }
 
-      router.push("/workouts")
+      router.push("/workouts");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to create workout")
+      setError(e instanceof Error ? e.message : "Failed to create workout");
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
   }
 
   function toggleExercise(id: string) {
     setSelected((prev) =>
-      prev.includes(id)
-        ? prev.filter((e) => e !== id)
-        : [...prev, id]
-    )
+      prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id],
+    );
+  }
+
+  function clearFilters() {
+    setSearch("");
+    setMuscleGroup("");
+    setEquipment("");
+    setCategory("");
   }
 
   return (
     <div className="relative min-h-screen px-4 pt-28 pb-20 sm:px-6">
       {/* Ambient background glow */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+      >
         <div className="grid-bg absolute inset-0 opacity-40 [mask-image:radial-gradient(ellipse_70%_50%_at_50%_0%,#000,transparent_80%)]" />
         <div className="animate-orb absolute top-24 left-1/3 h-96 w-96 rounded-full bg-volt-300/10 blur-[100px]" />
       </div>
@@ -112,7 +168,8 @@ export default function CreateWorkout() {
               Create a <span className="text-gradient">Workout</span>
             </h1>
             <p className="mt-2 text-sm text-white/60">
-              Pick target exercises, assign a routine title, and assemble your workout split.
+              Pick target exercises, assign a routine title, and assemble your
+              workout split.
             </p>
           </div>
           <Link
@@ -126,7 +183,10 @@ export default function CreateWorkout() {
 
         {error && (
           <div className="mb-6 flex items-start gap-2.5 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300 backdrop-blur-md">
-            <Icon name="close" className="mt-0.5 h-4 w-4 shrink-0 text-rose-400" />
+            <Icon
+              name="close"
+              className="mt-0.5 h-4 w-4 shrink-0 text-rose-400"
+            />
             <span>{error}</span>
           </div>
         )}
@@ -195,21 +255,82 @@ export default function CreateWorkout() {
               Choose exercises *
             </h2>
             <div className="glass-strong rounded-3xl border border-white/10 p-6 shadow-2xl backdrop-blur-xl">
+              <div className="mb-5 space-y-3">
+                <div>
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search exercises..."
+                    className="glass h-11 w-full rounded-xl border border-white/12 bg-white/[0.04] px-4 text-sm text-white placeholder-white/35 transition-all outline-none focus:border-volt-300/60 focus:bg-white/[0.08] focus:ring-2 focus:ring-volt-300/20"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <select
+                    value={muscleGroup}
+                    onChange={(e) => setMuscleGroup(e.target.value)}
+                    className="glass h-10 rounded-xl border border-white/12 bg-white/[0.04] px-3 text-sm text-white outline-none focus:border-volt-300/60"
+                  >
+                    <option value="">All muscles</option>
+                    <option value="Chest">Chest</option>
+                    <option value="Back">Back</option>
+                    <option value="Shoulders">Shoulders</option>
+                    <option value="Biceps">Biceps</option>
+                    <option value="Triceps">Triceps</option>
+                    <option value="Legs">Legs</option>
+                    <option value="Core">Core</option>
+                    <option value="Full Body">Full Body</option>
+                  </select>
+
+                  <select
+                    value={equipment}
+                    onChange={(e) => setEquipment(e.target.value)}
+                    className="glass h-10 rounded-xl border border-white/12 bg-white/[0.04] px-3 text-sm text-white outline-none focus:border-volt-300/60"
+                  >
+                    <option value="">All equipment</option>
+                    <option value="Barbell">Barbell</option>
+                    <option value="Dumbbell">Dumbbell</option>
+                    <option value="Cable">Cable</option>
+                    <option value="Machine">Machine</option>
+                    <option value="Bodyweight">Bodyweight</option>
+                    <option value="Pull-up Bar">Pull-up Bar</option>
+                    <option value="Jump Rope">Jump Rope</option>
+                  </select>
+
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="glass h-10 rounded-xl border border-white/12 bg-white/[0.04] px-3 text-sm text-white outline-none focus:border-volt-300/60"
+                  >
+                    <option value="">All categories</option>
+                    <option value="Strength">Strength</option>
+                    <option value="Isolation">Isolation</option>
+                    <option value="Bodyweight">Bodyweight</option>
+                    <option value="Core">Core</option>
+                    <option value="Conditioning">Conditioning</option>
+                  </select>
+                  <button
+                    type="button"
+                    onClick={clearFilters}
+                    className="text-sm text-white/60 transition hover:text-white"
+                  >
+                    Clear filters
+                  </button>
+                </div>
+              </div>
               {loading ? (
                 <div className="py-8 text-center text-sm text-white/50 animate-pulse">
                   Loading available exercises…
                 </div>
               ) : exercises.length === 0 ? (
                 <div className="py-8 text-center text-sm text-white/50">
-                  No exercises found.{" "}
-                  <Link href="/exercises" className="text-volt-300 hover:underline">
-                    Create some first here
-                  </Link>.
+                  No exercises found. .
                 </div>
               ) : (
                 <div className="max-h-[440px] space-y-2.5 overflow-y-auto pr-1.5 scroll-thin">
                   {exercises.map((ex) => {
-                    const checked = selected.includes(ex._id)
+                    const checked = selected.includes(ex._id);
                     return (
                       <label
                         key={ex._id}
@@ -241,7 +362,7 @@ export default function CreateWorkout() {
                           </span>
                         </span>
                       </label>
-                    )
+                    );
                   })}
                 </div>
               )}
@@ -250,5 +371,5 @@ export default function CreateWorkout() {
         </form>
       </div>
     </div>
-  )
+  );
 }

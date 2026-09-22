@@ -50,18 +50,37 @@ export const createExercise = async (req: Request, res: Response) => {
 // Get all exercises
 export const getExercises = async (req: Request, res: Response) => {
   try {
-    const exercises = await Exercise.find();
+    const filter: Record<string, any> = {};
+
+    if (req.query.category) {
+      filter.category = req.query.category;
+    }
+
+    if (req.query.muscleGroup) {
+      filter.muscleGroup = req.query.muscleGroup;
+    }
+
+    if (req.query.equipment) {
+      filter.equipment = req.query.equipment;
+    }
+
+    if (req.query.search) {
+      filter.name = {
+        $regex: req.query.search,
+        $options: "i",
+      };
+    }
+
+    const exercises = await Exercise.find(filter).sort({ name: 1 });
 
     return res.json(exercises);
   } catch (err) {
     console.error("Get exercises error:", err);
-
     return res.status(500).json({
       message: "Failed to fetch exercises",
     });
   }
 };
-
 // Get exercise by ID
 export const getExerciseById = async (req: Request, res: Response) => {
   try {
