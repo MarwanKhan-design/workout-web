@@ -272,15 +272,15 @@ export default function CreateWorkout() {
                     onChange={(e) => setMuscleGroup(e.target.value)}
                     className="glass h-10 rounded-xl border border-white/12 bg-white/[0.04] px-3 text-sm text-white outline-none focus:border-volt-300/60"
                   >
-                    <option value="">All muscles</option>
-                    <option value="Chest">Chest</option>
-                    <option value="Back">Back</option>
-                    <option value="Shoulders">Shoulders</option>
-                    <option value="Biceps">Biceps</option>
-                    <option value="Triceps">Triceps</option>
-                    <option value="Legs">Legs</option>
-                    <option value="Core">Core</option>
-                    <option value="Full Body">Full Body</option>
+                    <option value="" className="bg-ink-950 text-white">All muscles</option>
+                    <option value="Chest" className="bg-ink-950 text-white">Chest</option>
+                    <option value="Back" className="bg-ink-950 text-white">Back</option>
+                    <option value="Shoulders" className="bg-ink-950 text-white">Shoulders</option>
+                    <option value="Biceps" className="bg-ink-950 text-white">Biceps</option>
+                    <option value="Triceps" className="bg-ink-950 text-white">Triceps</option>
+                    <option value="Legs" className="bg-ink-950 text-white">Legs</option>
+                    <option value="Core" className="bg-ink-950 text-white">Core</option>
+                    <option value="Full Body" className="bg-ink-950 text-white">Full Body</option>
                   </select>
 
                   <select
@@ -288,14 +288,14 @@ export default function CreateWorkout() {
                     onChange={(e) => setEquipment(e.target.value)}
                     className="glass h-10 rounded-xl border border-white/12 bg-white/[0.04] px-3 text-sm text-white outline-none focus:border-volt-300/60"
                   >
-                    <option value="">All equipment</option>
-                    <option value="Barbell">Barbell</option>
-                    <option value="Dumbbell">Dumbbell</option>
-                    <option value="Cable">Cable</option>
-                    <option value="Machine">Machine</option>
-                    <option value="Bodyweight">Bodyweight</option>
-                    <option value="Pull-up Bar">Pull-up Bar</option>
-                    <option value="Jump Rope">Jump Rope</option>
+                    <option value="" className="bg-ink-950 text-white">All equipment</option>
+                    <option value="Barbell" className="bg-ink-950 text-white">Barbell</option>
+                    <option value="Dumbbell" className="bg-ink-950 text-white">Dumbbell</option>
+                    <option value="Cable" className="bg-ink-950 text-white">Cable</option>
+                    <option value="Machine" className="bg-ink-950 text-white">Machine</option>
+                    <option value="Bodyweight" className="bg-ink-950 text-white">Bodyweight</option>
+                    <option value="Pull-up Bar" className="bg-ink-950 text-white">Pull-up Bar</option>
+                    <option value="Jump Rope" className="bg-ink-950 text-white">Jump Rope</option>
                   </select>
 
                   <select
@@ -303,12 +303,12 @@ export default function CreateWorkout() {
                     onChange={(e) => setCategory(e.target.value)}
                     className="glass h-10 rounded-xl border border-white/12 bg-white/[0.04] px-3 text-sm text-white outline-none focus:border-volt-300/60"
                   >
-                    <option value="">All categories</option>
-                    <option value="Strength">Strength</option>
-                    <option value="Isolation">Isolation</option>
-                    <option value="Bodyweight">Bodyweight</option>
-                    <option value="Core">Core</option>
-                    <option value="Conditioning">Conditioning</option>
+                    <option value="" className="bg-ink-950 text-white">All categories</option>
+                    <option value="Strength" className="bg-ink-950 text-white">Strength</option>
+                    <option value="Isolation" className="bg-ink-950 text-white">Isolation</option>
+                    <option value="Bodyweight" className="bg-ink-950 text-white">Bodyweight</option>
+                    <option value="Core" className="bg-ink-950 text-white">Core</option>
+                    <option value="Conditioning" className="bg-ink-950 text-white">Conditioning</option>
                   </select>
                   <button
                     type="button"
